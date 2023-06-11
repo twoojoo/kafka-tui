@@ -78,13 +78,12 @@ func GetTopicsSize(admin *sarama.ClusterAdmin, topics []string) map[string]int {
 		panic(err)
 	}
 
-
 	out := map[string]int{}
 	for _, t := range desc[0][0].Topics {
 		if includes(&topics, t.Topic) {
 			size := 0
 
-			for _,p := range t.Partitions {
+			for _, p := range t.Partitions {
 				size += int(p.Size)
 			}
 
@@ -95,6 +94,13 @@ func GetTopicsSize(admin *sarama.ClusterAdmin, topics []string) map[string]int {
 	return out
 }
 
+// func GetTopicsMessages(admin *sarama.ClusterAdmin) map[string]int {
+// 	desc, err := (*admin).([]int32{broker})
+// 	if err != nil {
+// 		panic(err)
+// 	}
+
+// }
 
 func includes[T comparable](slice *[]T, value T) bool {
 	for _, item := range *slice {

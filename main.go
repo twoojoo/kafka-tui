@@ -35,6 +35,19 @@ type Theme struct {
 }
 
 func main() {
+	// title := "  _  __          ______ _  __                     _______ _    _ _____"
+	// title += "\n | |/ /    /\\   |  ____| |/ /    /\\              |__   __| |  | |_   _|"
+	// title += "\n | ' /    /  \\  | |__  | ' /    /  \\     ______     | |  | |  | | | |"
+	// title += "\n |  <    / /\\ \\ |  __| |  <    / /\\ \\   |______|    | |  | |  | | | |"
+	// title += "\n | . \\  / ____ \\| |    | . \\  / ____ \\              | |  | |__| |_| |_"
+	// title += "\n |_|\\_\\/_/    \\_\\_|    |_|\\_\\/_/    \\_\\             |_|   \\____/|_____|"
+
+	title := "  _  _______ _   _ ___"
+	title += "\n | |/ /_   _| | | |_ _|"
+	title += "\n | ' /  | | | | | || |"
+	title += "\n | . \\  | | | |_| || |"
+	title += "\n |_|\\_\\ |_|  \\___/|___| by twoojoo"
+
 	app := tview.NewApplication()
 
 	theme := Theme{
@@ -102,15 +115,27 @@ func main() {
 	ui.sidePane.AddItem("Topics", "", '2', func() { showTopicsView(&ui) })
 	ui.sidePane.AddItem("Consumers", "", '3', func() { showConsumersView(&ui) })
 
-	main := tview.NewFlex()
-	main.SetTitle(" Kafka TUI ")
-	main.AddItem(ui.sidePane, 20, 0, true)
-	main.AddItem(ui.view, 0, 1, true)
+	main2 := tview.NewFlex()
+	main2.SetTitle(" Kafka TUI ")
+	main2.AddItem(ui.sidePane, 20, 0, true)
+	main2.AddItem(ui.view, 0, 1, false)
+
+	titleBar := tview.NewTextView()
+	titleBar.SetText(title)
+	titleBar.SetBorder(true)
+	titleBar.SetBackgroundColor(ui.theme.Background)
+	titleBar.SetTextStyle(tcell.StyleDefault.Attributes(tcell.AttrBold))
+	titleBar.SetTextColor(ui.theme.PrimaryColor)
+
+	main1 := tview.NewFlex()
+	main1.SetDirection(0)
+	main1.AddItem(titleBar, 8, 0, false)
+	main1.AddItem(main2, 0, 1, true)
 
 	app.SetFocus(ui.sidePane)
 	app.EnableMouse(true)
 
-	if err := app.SetRoot(main, true).Run(); err != nil {
+	if err := app.SetRoot(main1, true).Run(); err != nil {
 		panic(err)
 	}
 }

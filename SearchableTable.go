@@ -96,7 +96,6 @@ func (t *SearchableTable) printColumnNames(color tcell.Color) *SearchableTable {
 
 func (t *SearchableTable) SetSearchableColumn(col int) *SearchableTable {
 	t.searchableColumn = col
-
 	return t
 }
 
