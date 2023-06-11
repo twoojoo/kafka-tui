@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"sort"
 	"strconv"
 
 	"github.com/Shopify/sarama"
@@ -10,13 +11,19 @@ import (
 )
 
 type UI struct {
+	//graphic stuff
+	theme          *Theme
+	app            *tview.Application
+	sidePane       *tview.List
+	view           *tview.Grid
+	brokersTable   *SearchableTable
+	consumersTable *SearchableTable
+	topicsTable    *SearchableTable
+
+	//kafka stuff
 	adminClient                *sarama.ClusterAdmin
-	theme                      *Theme
-	app                        *tview.Application
-	sidePane                   *tview.List
-	view                       *tview.Grid
-	consumersTable             *SearchableTable
-	topicsTable                *SearchableTable
+	brokers                    []*sarama.Broker
+	controllerId               int32
 	topics                     map[string]sarama.TopicDetail
 	topicsMetadata             []*sarama.TopicMetadata
 	topicsSize                 map[string]int
@@ -53,7 +60,7 @@ func main() {
 	theme := Theme{
 		Background:      tcell.ColorReset,
 		Foreground:      tcell.ColorWhite,
-		PrimaryColor:    tcell.ColorBlue,
+		PrimaryColor:    tcell.ColorHotPink,
 		InEvidenceColor: tcell.ColorYellow,
 		InfoColor:       tcell.ColorGreen,
 		ErrorColor:      tcell.ColorRed,
@@ -63,6 +70,7 @@ func main() {
 	sidePane := tview.NewList()
 	admin := GetAdminClient()
 	topics := GetTopics(admin)
+	brokers, controllerId := GetBrokers(admin)
 
 	ui := UI{
 		adminClient:    admin,
@@ -70,6 +78,9 @@ func main() {
 		app:            app,
 		sidePane:       sidePane,
 		view:           tview.NewGrid(),
+		brokers:        brokers,
+		controllerId:   controllerId,
+		brokersTable:   NewSearchableTable(sidePane, app),
 		consumersTable: NewSearchableTable(sidePane, app),
 		topicsTable:    NewSearchableTable(sidePane, app),
 		topics:         topics,
@@ -84,6 +95,19 @@ func main() {
 
 	ui.view.SetBorder(true)
 	ui.view.SetBackgroundColor(ui.theme.Background)
+
+	ui.brokersTable.Table.SetTitle(" Brokers ")
+	ui.brokersTable.Table.SetTitleAlign(0)
+	ui.brokersTable.Table.SetBorder(true)
+	ui.brokersTable.Table.SetBackgroundColor(ui.theme.Background)
+	ui.brokersTable.Table.SetSelectable(true, false)
+	ui.brokersTable.Table.SetSeparator('┆')
+
+	ui.brokersTable.SearchBox.SetLabel(" > ")
+	ui.brokersTable.SearchBox.SetBorder(true)
+	ui.brokersTable.SearchBox.SetBorderColor(ui.theme.Foreground)
+	ui.brokersTable.SearchBox.SetBackgroundColor(ui.theme.Background)
+	ui.brokersTable.SearchBox.SetFieldBackgroundColor(ui.theme.Background)
 
 	ui.consumersTable.Table.SetTitle(" Consumer Groups ")
 	ui.consumersTable.Table.SetTitleAlign(0)
@@ -134,14 +158,22 @@ func main() {
 		titleBar.SetTextStyle(tcell.StyleDefault.Attributes(tcell.AttrBold))
 		titleBar.SetTextColor(ui.theme.PrimaryColor)
 
-		hotkeysBar := tview.NewTextView()
-		hotkeysBar.SetText(getHotkeysText())
-		hotkeysBar.SetTextAlign(2)
-		hotkeysBar.SetBackgroundColor(ui.theme.Background)
-		hotkeysBar.SetTextColor(ui.theme.Foreground)
+		hotkeysText := tview.NewTextView()
+		hotkeysText.SetText(getHotkeysText())
+		hotkeysText.SetTextAlign(2)
+		hotkeysText.SetBackgroundColor(ui.theme.Background)
+		hotkeysText.SetTextColor(ui.theme.Foreground)
+		hotkeysText.SetTextStyle(tcell.StyleDefault.Attributes(tcell.AttrDim))
+
+		hotkeysKeys := tview.NewTextView()
+		hotkeysKeys.SetText(getHotkeys())
+		hotkeysKeys.SetTextAlign(2)
+		hotkeysKeys.SetBackgroundColor(ui.theme.Background)
+		hotkeysKeys.SetTextColor(ui.theme.InEvidenceColor)
 
 		topBar.AddItem(titleBar, 0, 1, false)
-		topBar.AddItem(hotkeysBar, 32, 0, false)
+		topBar.AddItem(hotkeysText, 17, 0, false)
+		topBar.AddItem(hotkeysKeys, 10, 0, false)
 
 		main1.AddItem(topBar, 8, 0, false)
 	}
@@ -157,7 +189,52 @@ func main() {
 }
 
 func showBrokersView(ui *UI) {
+	brokers, controllerId := GetBrokers(ui.adminClient)
+	ui.brokers = brokers
+	ui.controllerId = controllerId
 
+	ui.view.SetBorder(false)
+
+	ui.app.SetFocus(ui.brokersTable.Table)
+	ui.view.AddItem(ui.brokersTable.Container, 0, 0, 1, 1, 0, 0, true)
+
+	ui.brokersTable.Table.Clear()
+
+	for i, broker := range ui.brokers {
+
+		ui.brokersTable.SetColumnNames([]string{
+			" ID   ",
+			" Address   ",
+			// " N° Partitions   ",
+			// " Lag   ",
+			// " Coordinator   ",
+			// " State   ",
+		}, ui.theme.PrimaryColor)
+
+		// i := 1
+		// for group, info := range ui.consumerGroups {
+
+		// 	var description *sarama.GroupDescription
+		// 	for _, item := range ui.consumerGroupsDescriptions {
+		// 		if item.GroupId == group {
+		// 			description = item
+		// 			break
+		// 		}
+		// 	}
+
+		// 	stateCell := tview.NewTableCell(" " + description.State + "   ")
+		// 	if description.State == "Stable" {
+		// 		stateCell = stateCell.SetTextColor(ui.theme.InfoColor)
+		// 	} else {
+		// 		stateCell = stateCell.SetTextColor(ui.theme.ErrorColor)
+		// 	}
+
+		ui.brokersTable.Table.SetCell(i+1, 0, tview.NewTableCell(" "+strconv.Itoa(int(broker.ID()))+"   ").SetTextColor(ui.theme.InEvidenceColor))
+		ui.brokersTable.Table.SetCell(i+1, 1, tview.NewTableCell(" "+broker.Addr()+"   ").SetTextColor(ui.theme.Foreground))
+		// 	ui.consumersTable.Table.SetCell(i, 2, tview.NewTableCell(" "+info+"   ").SetTextColor(ui.theme.Foreground))
+		// 	ui.consumersTable.Table.SetCell(i, 5, stateCell)
+		// 	i++
+	}
 }
 
 func showConsumersView(ui *UI) {
@@ -216,6 +293,8 @@ func showTopicsView(ui *UI) {
 	for topic := range ui.topics {
 		topicNames = append(topicNames, topic)
 	}
+
+	sort.Strings(topicNames)
 	ui.topicsSize = GetTopicsSize(ui.adminClient, topicNames)
 
 	ui.view.SetBorder(false)
@@ -223,20 +302,21 @@ func showTopicsView(ui *UI) {
 	ui.app.SetFocus(ui.topicsTable.Table)
 	ui.view.AddItem(ui.topicsTable.Container, 0, 0, 1, 1, 0, 0, true)
 
-	ui.topicsTable.Table.Clear()
+	// ui.topicsTable.Table.Clear()
 
 	ui.topicsTable.SetColumnNames([]string{
 		" Name   ",
 		" Internal   ",
 		" Partitions   ",
-		" Out of sync replicas   ",
+		// " Out of sync replicas   ",
 		" Replication factor   ",
 		" Messages   ",
 		" Size   ",
 	}, ui.theme.PrimaryColor)
 
 	i := 1
-	for topic, info := range ui.topics {
+	for _, topic := range topicNames {
+		info := ui.topics[topic]
 		partitions := strconv.FormatInt(int64(info.NumPartitions), 10)
 		repFactor := strconv.Itoa(int(info.ReplicationFactor))
 
@@ -251,8 +331,8 @@ func showTopicsView(ui *UI) {
 		ui.topicsTable.Table.SetCell(i, 0, tview.NewTableCell(" "+topic+"   ").SetTextColor(ui.theme.InEvidenceColor))
 		ui.topicsTable.Table.SetCell(i, 1, tview.NewTableCell(" "+isInternal+"   ").SetTextColor(ui.theme.Foreground))
 		ui.topicsTable.Table.SetCell(i, 2, tview.NewTableCell(" "+partitions+"   ").SetTextColor(ui.theme.Foreground))
-		ui.topicsTable.Table.SetCell(i, 4, tview.NewTableCell(" "+repFactor+"   ").SetTextColor(ui.theme.Foreground))
-		ui.topicsTable.Table.SetCell(i, 6, tview.NewTableCell(" "+bytesToString(ui.topicsSize[topic])+"   ").SetTextColor(ui.theme.Foreground))
+		ui.topicsTable.Table.SetCell(i, 3, tview.NewTableCell(" "+repFactor+"   ").SetTextColor(ui.theme.Foreground))
+		ui.topicsTable.Table.SetCell(i, 5, tview.NewTableCell(" "+bytesToString(ui.topicsSize[topic])+"   ").SetTextColor(ui.theme.Foreground))
 		i++
 	}
 }
@@ -284,10 +364,20 @@ func getTitle() string {
 
 func getHotkeysText() string {
 	htkTxt := ""
-	htkTxt += "\nmove through tabs     TAB  "
-	htkTxt += "\nfocus search bar       \\  "
-	htkTxt += "\nselect element   Enter  "
-	htkTxt += "\nmove     🡡 🡣  "
+	htkTxt += "\nmove through tabs"
+	htkTxt += "\nfocus search bar"
+	htkTxt += "\nselect element"
+	htkTxt += "\nmove"
+
+	return htkTxt
+}
+
+func getHotkeys() string {
+	htkTxt := ""
+	htkTxt += "\nTab  "
+	htkTxt += "\n\\  "
+	htkTxt += "\nEnter  "
+	htkTxt += "\n🡡 🡣  "
 
 	return htkTxt
 }
