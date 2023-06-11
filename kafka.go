@@ -3,6 +3,8 @@ package main
 import (
 	// "fmt"
 
+	"fmt"
+
 	"github.com/Shopify/sarama"
 )
 
@@ -72,11 +74,44 @@ func GetConsumersGroupsDescription(admin *sarama.ClusterAdmin, groups map[string
 	return desc
 }
 
+func GetTopicsSize(admin *sarama.ClusterAdmin, topics []string) map[string]int {
+	var broker int32 = 0
 
+	desc, err := (*admin).DescribeLogDirs([]int32{broker})
+	if err != nil {
+		panic(err)
+	}
+
+
+	out := map[string]int{}
+	for _, t := range desc[0][0].Topics {
+		if includes[string](&topics, t.Topic) {
+			size := 0
+
+			for _,p := range t.Partitions {
+				size += int(p.Size)
+			}
+
+			out[t.Topic] = size
+		}
+	}
+
+	return out
+}
 
 // func main() {
 // 	admin := GetAdminClient()
-// 	offset := GetConsumersGroupOffset(admin, "sp-reservation-parser", map[string][]int32{"sp-gpcs-reservations-raw": []int32{0}})
-// 	var map1 *sarama.OffsetFetchResponseBlock = offset.Blocks["sp-gpcs-reservations-raw"][0]
-// 	fmt.Println(map1.Offset)
+// 	desc := GetLogDirsDescriptions(admin)
+// 	// var map1 *sarama.OffsetFetchResponseBlock = offset.Blocks["sp-gpcs-reservations-raw"][0]
+// 	topic := desc[0][0].Topics[0].Partitions
+// 	fmt.Println()
 // }
+
+func includes[T comparable](slice *[]T, value T) bool {
+	for _, item := range *slice {
+		if item == value {
+			return true
+		}
+	}
+	return false
+}
