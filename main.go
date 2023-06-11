@@ -18,6 +18,7 @@ type UI struct {
 	topicsTable                *SearchableTable
 	topics                     map[string]sarama.TopicDetail
 	topicsMetadata             []*sarama.TopicMetadata
+	topicsSize                 map[string]int
 	consumerGroups             map[string]string
 	consumerGroupsOffsets      map[string]*sarama.OffsetFetchResponse
 	consumerGroupsDescriptions []*sarama.GroupDescription
@@ -169,6 +170,12 @@ func showTopicsView(ui *UI) {
 	ui.topics = topics
 	ui.topicsMetadata = GetTopicsMetadata(ui.adminClient, topics)
 
+	topicNames := []string{}
+	for topic, _ := range ui.topics {
+		topicNames = append(topicNames, topic)
+	}
+	ui.topicsSize = GetTopicsSize(ui.adminClient, topicNames)
+
 	ui.view.SetBorder(false)
 
 	ui.app.SetFocus(ui.topicsTable.Table)
@@ -201,6 +208,25 @@ func showTopicsView(ui *UI) {
 		ui.topicsTable.Table.SetCell(i, 1, tview.NewTableCell(" "+isInternal+"   ").SetTextColor(ui.theme.Foreground))
 		ui.topicsTable.Table.SetCell(i, 2, tview.NewTableCell(" "+partitions+"   ").SetTextColor(ui.theme.Foreground))
 		ui.topicsTable.Table.SetCell(i, 4, tview.NewTableCell(" "+repFactor+"   ").SetTextColor(ui.theme.Foreground))
+		ui.topicsTable.Table.SetCell(i, 6, tview.NewTableCell(" "+bytesToString(ui.topicsSize[topic])+"   ").SetTextColor(ui.theme.Foreground))
 		i++
 	}
 }
+
+
+func bytesToString(bytes int) string {
+	m := 1024 //multiplier
+
+	if bytes < 1024 {
+		return strconv.Itoa(bytes) + " bytes"
+	} else if bytes < m*m {
+		return strconv.Itoa(bytes/m) + " KB" 
+	} else if bytes < m*m*m {
+		return strconv.Itoa((bytes/m)/m) + " MB" 
+	} else if bytes < m*m*m*m{
+		return strconv.Itoa(((bytes/m)/m)/m) + " GB" 
+	} else {
+		return strconv.Itoa((((bytes/m)/m)/m)/m) + " TB" 
+	}
+}
+
