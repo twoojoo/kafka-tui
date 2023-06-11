@@ -81,7 +81,7 @@ func GetTopicsSize(admin *sarama.ClusterAdmin, topics []string) map[string]int {
 
 	out := map[string]int{}
 	for _, t := range desc[0][0].Topics {
-		if includes[string](&topics, t.Topic) {
+		if includes(&topics, t.Topic) {
 			size := 0
 
 			for _,p := range t.Partitions {
@@ -95,13 +95,6 @@ func GetTopicsSize(admin *sarama.ClusterAdmin, topics []string) map[string]int {
 	return out
 }
 
-// func main() {
-// 	admin := GetAdminClient()
-// 	desc := GetLogDirsDescriptions(admin)
-// 	// var map1 *sarama.OffsetFetchResponseBlock = offset.Blocks["sp-gpcs-reservations-raw"][0]
-// 	topic := desc[0][0].Topics[0].Partitions
-// 	fmt.Println()
-// }
 
 func includes[T comparable](slice *[]T, value T) bool {
 	for _, item := range *slice {
@@ -111,3 +104,11 @@ func includes[T comparable](slice *[]T, value T) bool {
 	}
 	return false
 }
+
+// func main() {
+// 	admin := GetAdminClient()
+// 	desc := GetLogDirsDescriptions(admin)
+// 	// var map1 *sarama.OffsetFetchResponseBlock = offset.Blocks["sp-gpcs-reservations-raw"][0]
+// 	topic := desc[0][0].Topics[0].Partitions
+// 	fmt.Println()
+// }

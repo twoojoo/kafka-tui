@@ -77,7 +77,7 @@ func main() {
 	ui.consumersTable.Table.SetBorder(true)
 	ui.consumersTable.Table.SetBackgroundColor(ui.theme.Background)
 	ui.consumersTable.Table.SetSelectable(true, false)
-	ui.consumersTable.Table.SetSeparator(' ')
+	ui.consumersTable.Table.SetSeparator('┆')
 
 	ui.consumersTable.SearchBox.SetLabel(" > ")
 	ui.consumersTable.SearchBox.SetBorder(true)
@@ -90,7 +90,7 @@ func main() {
 	ui.topicsTable.Table.SetBorder(true)
 	ui.topicsTable.Table.SetBackgroundColor(ui.theme.Background)
 	ui.topicsTable.Table.SetSelectable(true, false)
-	ui.topicsTable.Table.SetSeparator(' ')
+	ui.topicsTable.Table.SetSeparator('┆')
 
 	ui.topicsTable.SearchBox.SetLabel(" > ")
 	ui.topicsTable.SearchBox.SetBorder(true)
@@ -122,13 +122,14 @@ func showBrokersView(ui *UI) {
 func showConsumersView(ui *UI) {
 	ui.topics = GetTopics(ui.adminClient)
 	ui.consumerGroups = GetConsumersGroups(ui.adminClient)
-	// ui.consumerGroupsOffsets = GetConsumersGroupOffset(ui.adminClient, )
 	ui.consumerGroupsDescriptions = GetConsumersGroupsDescription(ui.adminClient, ui.consumerGroups)
 
 	ui.view.SetBorder(false)
 
 	ui.app.SetFocus(ui.consumersTable.Table)
 	ui.view.AddItem(ui.consumersTable.Container, 0, 0, 1, 1, 0, 0, true)
+
+	ui.consumersTable.Table.Clear()
 
 	ui.consumersTable.SetColumnNames([]string{
 		" Group ID   ",
@@ -171,7 +172,7 @@ func showTopicsView(ui *UI) {
 	ui.topicsMetadata = GetTopicsMetadata(ui.adminClient, topics)
 
 	topicNames := []string{}
-	for topic, _ := range ui.topics {
+	for topic := range ui.topics {
 		topicNames = append(topicNames, topic)
 	}
 	ui.topicsSize = GetTopicsSize(ui.adminClient, topicNames)
@@ -180,6 +181,8 @@ func showTopicsView(ui *UI) {
 
 	ui.app.SetFocus(ui.topicsTable.Table)
 	ui.view.AddItem(ui.topicsTable.Container, 0, 0, 1, 1, 0, 0, true)
+
+	ui.topicsTable.Table.Clear()
 
 	ui.topicsTable.SetColumnNames([]string{
 		" Name   ",
@@ -213,20 +216,18 @@ func showTopicsView(ui *UI) {
 	}
 }
 
-
 func bytesToString(bytes int) string {
 	m := 1024 //multiplier
 
 	if bytes < 1024 {
 		return strconv.Itoa(bytes) + " bytes"
 	} else if bytes < m*m {
-		return strconv.Itoa(bytes/m) + " KB" 
+		return strconv.Itoa(bytes/m) + " KB"
 	} else if bytes < m*m*m {
-		return strconv.Itoa((bytes/m)/m) + " MB" 
-	} else if bytes < m*m*m*m{
-		return strconv.Itoa(((bytes/m)/m)/m) + " GB" 
+		return strconv.Itoa((bytes/m)/m) + " MB"
+	} else if bytes < m*m*m*m {
+		return strconv.Itoa(((bytes/m)/m)/m) + " GB"
 	} else {
-		return strconv.Itoa((((bytes/m)/m)/m)/m) + " TB" 
+		return strconv.Itoa((((bytes/m)/m)/m)/m) + " TB"
 	}
 }
-
