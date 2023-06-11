@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os"
 	"strconv"
 
 	"github.com/Shopify/sarama"
@@ -35,18 +36,15 @@ type Theme struct {
 }
 
 func main() {
-	// title := "  _  __          ______ _  __                     _______ _    _ _____"
-	// title += "\n | |/ /    /\\   |  ____| |/ /    /\\              |__   __| |  | |_   _|"
-	// title += "\n | ' /    /  \\  | |__  | ' /    /  \\     ______     | |  | |  | | | |"
-	// title += "\n |  <    / /\\ \\ |  __| |  <    / /\\ \\   |______|    | |  | |  | | | |"
-	// title += "\n | . \\  / ____ \\| |    | . \\  / ____ \\              | |  | |__| |_| |_"
-	// title += "\n |_|\\_\\/_/    \\_\\_|    |_|\\_\\/_/    \\_\\             |_|   \\____/|_____|"
 
-	title := "  _  _______ _   _ ___"
-	title += "\n | |/ /_   _| | | |_ _|"
-	title += "\n | ' /  | | | | | || |"
-	title += "\n | . \\  | | | |_| || |"
-	title += "\n |_|\\_\\ |_|  \\___/|___| by twoojoo"
+	args := os.Args
+	noTopBar := false
+
+	for _, arg := range args {
+		if arg == "--no-top-bar" {
+			noTopBar = true
+		}
+	}
 
 	app := tview.NewApplication()
 
@@ -120,16 +118,32 @@ func main() {
 	main2.AddItem(ui.sidePane, 20, 0, true)
 	main2.AddItem(ui.view, 0, 1, false)
 
-	titleBar := tview.NewTextView()
-	titleBar.SetText(title)
-	titleBar.SetBorder(true)
-	titleBar.SetBackgroundColor(ui.theme.Background)
-	titleBar.SetTextStyle(tcell.StyleDefault.Attributes(tcell.AttrBold))
-	titleBar.SetTextColor(ui.theme.PrimaryColor)
-
 	main1 := tview.NewFlex()
 	main1.SetDirection(0)
-	main1.AddItem(titleBar, 8, 0, false)
+
+	if !noTopBar {
+		topBar := tview.NewFlex()
+		topBar.SetBorder(true)
+		topBar.SetBackgroundColor(ui.theme.Background)
+
+		titleBar := tview.NewTextView()
+		titleBar.SetText(getTitle())
+		titleBar.SetBackgroundColor(ui.theme.Background)
+		titleBar.SetTextStyle(tcell.StyleDefault.Attributes(tcell.AttrBold))
+		titleBar.SetTextColor(ui.theme.PrimaryColor)
+
+		hotkeysBar := tview.NewTextView()
+		hotkeysBar.SetText(getHotkeysText())
+		hotkeysBar.SetTextAlign(2)
+		hotkeysBar.SetBackgroundColor(ui.theme.Background)
+		hotkeysBar.SetTextColor(ui.theme.Foreground)
+
+		topBar.AddItem(titleBar, 0, 1, false)
+		topBar.AddItem(hotkeysBar, 0, 1, false)
+
+		main1.AddItem(topBar, 8, 0, false)
+	}
+
 	main1.AddItem(main2, 0, 1, true)
 
 	app.SetFocus(ui.sidePane)
@@ -255,4 +269,23 @@ func bytesToString(bytes int) string {
 	} else {
 		return strconv.Itoa((((bytes/m)/m)/m)/m) + " TB"
 	}
+}
+
+func getTitle() string {
+	title := "  _  _______ _   _ ___"
+	title += "\n | |/ /_   _| | | |_ _|"
+	title += "\n | ' /  | | | | | || |"
+	title += "\n | . \\  | | | |_| || |"
+	title += "\n |_|\\_\\ |_|  \\___/|___| by twoojoo"
+	return title
+}
+
+func getHotkeysText() string {
+	htkTxt := ""
+	htkTxt += "\nTAB: move through tabs  "
+	htkTxt += "\n\\: focus search bar  "
+	htkTxt += "\n🡡 🡣 : move  "
+	htkTxt += "\nEnter: select element  "
+
+	return htkTxt
 }
