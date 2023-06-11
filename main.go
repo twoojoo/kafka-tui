@@ -35,6 +35,8 @@ type Theme struct {
 	WarningColor    tcell.Color
 }
 
+const Version = "0.0.1"
+
 func main() {
 
 	args := os.Args
@@ -139,7 +141,7 @@ func main() {
 		hotkeysBar.SetTextColor(ui.theme.Foreground)
 
 		topBar.AddItem(titleBar, 0, 1, false)
-		topBar.AddItem(hotkeysBar, 0, 1, false)
+		topBar.AddItem(hotkeysBar, 32, 0, false)
 
 		main1.AddItem(topBar, 8, 0, false)
 	}
@@ -276,16 +278,16 @@ func getTitle() string {
 	title += "\n | |/ /_   _| | | |_ _|"
 	title += "\n | ' /  | | | | | || |"
 	title += "\n | . \\  | | | |_| || |"
-	title += "\n |_|\\_\\ |_|  \\___/|___| by twoojoo"
+	title += "\n |_|\\_\\ |_|  \\___/|___| v" + Version + " (by twoojoo)"
 	return title
 }
 
 func getHotkeysText() string {
 	htkTxt := ""
-	htkTxt += "\nmove through tabs:      TAB  "
-	htkTxt += "\nfocus search bar:      \\  "
-	htkTxt += "\nmove:     🡡 🡣  "
-	htkTxt += "\nselect element:   Enter  "
+	htkTxt += "\nmove through tabs     TAB  "
+	htkTxt += "\nfocus search bar       \\  "
+	htkTxt += "\nselect element   Enter  "
+	htkTxt += "\nmove     🡡 🡣  "
 
 	return htkTxt
 }
