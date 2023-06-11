@@ -64,8 +64,9 @@ func main() {
 	ui.sidePane.SetBorder(true)
 	ui.sidePane.SetBackgroundColor(ui.theme.Background)
 	ui.sidePane.SetMainTextColor(ui.theme.Foreground)
-	ui.sidePane.SetSelectedBackgroundColor(ui.theme.PrimaryColor)
+	// ui.sidePane.SetSelectedBackgroundColor(ui.theme.PrimaryColor)
 	ui.sidePane.SetSelectedTextColor(ui.theme.Foreground)
+	ui.sidePane.SetSelectedStyle(tcell.StyleDefault.Attributes(tcell.AttrUnderline))
 
 	ui.view.SetBorder(true)
 	ui.view.SetBackgroundColor(ui.theme.Background)
