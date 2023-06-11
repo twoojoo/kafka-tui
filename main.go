@@ -282,10 +282,10 @@ func getTitle() string {
 
 func getHotkeysText() string {
 	htkTxt := ""
-	htkTxt += "\nTAB: move through tabs  "
-	htkTxt += "\n\\: focus search bar  "
-	htkTxt += "\n🡡 🡣 : move  "
-	htkTxt += "\nEnter: select element  "
+	htkTxt += "\nmove through tabs:      TAB  "
+	htkTxt += "\nfocus search bar:      \\  "
+	htkTxt += "\nmove:     🡡 🡣  "
+	htkTxt += "\nselect element:   Enter  "
 
 	return htkTxt
 }
