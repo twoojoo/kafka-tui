@@ -4,6 +4,8 @@ import (
 	"os"
 	"sort"
 	"strconv"
+	// "strings"
+	"time"
 
 	"github.com/Shopify/sarama"
 	"github.com/gdamore/tcell/v2"
@@ -15,10 +17,13 @@ type UI struct {
 	theme          *Theme
 	app            *tview.Application
 	sidePane       *tview.List
-	view           *tview.Grid
+	view           *tview.Flex
 	brokersTable   *SearchableTable
 	consumersTable *SearchableTable
 	topicsTable    *SearchableTable
+	topicDetail    *tview.Flex
+
+	updateFunc func(*UI)
 
 	//kafka stuff
 	adminClient                *sarama.ClusterAdmin
@@ -43,6 +48,7 @@ type Theme struct {
 }
 
 const Version = "0.0.1"
+const UpdateRateSec = 5
 
 func main() {
 
@@ -77,14 +83,24 @@ func main() {
 		theme:          &theme,
 		app:            app,
 		sidePane:       sidePane,
-		view:           tview.NewGrid(),
+		view:           tview.NewFlex(),
 		brokers:        brokers,
 		controllerId:   controllerId,
 		brokersTable:   NewSearchableTable(sidePane, app),
 		consumersTable: NewSearchableTable(sidePane, app),
 		topicsTable:    NewSearchableTable(sidePane, app),
 		topics:         topics,
+		updateFunc:     func(*UI) {},
 	}
+
+	//set the refresh goroutine
+	go func(ui *UI) {
+		for {
+			time.Sleep(UpdateRateSec * time.Second)
+			ui.updateFunc(ui)
+			ui.app.Draw()
+		}
+	}(&ui)
 
 	ui.sidePane.SetBorder(true)
 	ui.sidePane.SetBackgroundColor(ui.theme.Background)
@@ -135,9 +151,34 @@ func main() {
 	ui.topicsTable.SearchBox.SetBackgroundColor(ui.theme.Background)
 	ui.topicsTable.SearchBox.SetFieldBackgroundColor(ui.theme.Background)
 
-	ui.sidePane.AddItem("Brokers", "", '1', func() { showBrokersView(&ui) })
-	ui.sidePane.AddItem("Topics", "", '2', func() { showTopicsView(&ui) })
-	ui.sidePane.AddItem("Consumers", "", '3', func() { showConsumersView(&ui) })
+	ui.topicsTable.Table.SetSelectedFunc(func(row int, _ int) {
+		topic := ui.topicsTable.Table.GetCell(row, 0).Text
+		showTopicDetail(&ui, topic)
+	})
+
+	ui.sidePane.AddItem("Brokers", "", '1', func() {
+		ui.view.Clear()
+		ui.view.AddItem(ui.brokersTable.Container, 0, 1, false)
+		ui.updateFunc = showBrokersView
+		showBrokersView(&ui)
+		ui.app.SetFocus(ui.brokersTable.Table)
+	})
+
+	ui.sidePane.AddItem("Topics", "", '2', func() {
+		ui.view.Clear()
+		ui.view.AddItem(ui.topicsTable.Container, 0, 1, false)
+		ui.updateFunc = showTopicsView
+		showTopicsView(&ui)
+		ui.app.SetFocus(ui.topicsTable.Table)
+	})
+
+	ui.sidePane.AddItem("Consumers", "", '3', func() {
+		ui.view.Clear()
+		ui.view.AddItem(ui.consumersTable.Container, 0, 1, false)
+		ui.updateFunc = showConsumersView
+		showConsumersView(&ui)
+		ui.app.SetFocus(ui.consumersTable.Table)
+	})
 
 	main2 := tview.NewFlex()
 	main2.SetTitle(" Kafka TUI ")
@@ -195,9 +236,6 @@ func showBrokersView(ui *UI) {
 
 	ui.view.SetBorder(false)
 
-	ui.app.SetFocus(ui.brokersTable.Table)
-	ui.view.AddItem(ui.brokersTable.Container, 0, 0, 1, 1, 0, 0, true)
-
 	ui.brokersTable.Table.Clear()
 
 	for i, broker := range ui.brokers {
@@ -243,9 +281,6 @@ func showConsumersView(ui *UI) {
 	ui.consumerGroupsDescriptions = GetConsumersGroupsDescription(ui.adminClient, ui.consumerGroups)
 
 	ui.view.SetBorder(false)
-
-	ui.app.SetFocus(ui.consumersTable.Table)
-	ui.view.AddItem(ui.consumersTable.Container, 0, 0, 1, 1, 0, 0, true)
 
 	ui.consumersTable.Table.Clear()
 
@@ -299,10 +334,7 @@ func showTopicsView(ui *UI) {
 
 	ui.view.SetBorder(false)
 
-	ui.app.SetFocus(ui.topicsTable.Table)
-	ui.view.AddItem(ui.topicsTable.Container, 0, 0, 1, 1, 0, 0, true)
-
-	// ui.topicsTable.Table.Clear()
+	ui.topicsTable.Table.Clear()
 
 	ui.topicsTable.SetColumnNames([]string{
 		" Name   ",
@@ -337,6 +369,26 @@ func showTopicsView(ui *UI) {
 	}
 }
 
+func showTopicDetail(ui *UI, topic string) {
+	ui.topicDetail = tview.NewFlex()
+	ui.topicDetail.SetBorder(true)
+	ui.topicDetail.SetBackgroundColor(ui.theme.Background)
+	ui.topicDetail.SetDirection(0)
+	ui.topicDetail.SetTitle(" Topic detail: ")
+	ui.topicDetail.SetTitleAlign(0)
+
+	ui.view.Clear()
+	ui.view.AddItem(ui.topicsTable.Container, 0, 1, true)
+	ui.view.AddItem(ui.topicDetail, 0, 1, false)
+
+	detailTitle := tview.NewTextView()
+	detailTitle.SetText(topic)
+	detailTitle.SetBackgroundColor(ui.theme.Background)
+	detailTitle.SetTextColor(ui.theme.PrimaryColor)
+
+	ui.topicDetail.AddItem(detailTitle, 0, 1, false)
+}
+
 func bytesToString(bytes int) string {
 	m := 1024 //multiplier
 
@@ -354,11 +406,11 @@ func bytesToString(bytes int) string {
 }
 
 func getTitle() string {
-	title := "  _  _______ _   _ ___"
-	title += "\n | |/ /_   _| | | |_ _|"
-	title += "\n | ' /  | | | | | || |"
-	title += "\n | . \\  | | | |_| || |"
-	title += "\n |_|\\_\\ |_|  \\___/|___| v" + Version + " (by twoojoo)"
+	title := "   _  _______ _   _ ___"
+	title += "\n  | |/ /_   _| | | |_ _|"
+	title += "\n  | ' /  | | | | | || |"
+	title += "\n  | . \\  | | | |_| || |"
+	title += "\n  |_|\\_\\ |_|  \\___/|___| v" + Version + " (by twoojoo)"
 	return title
 }
 
@@ -374,10 +426,10 @@ func getHotkeysText() string {
 
 func getHotkeys() string {
 	htkTxt := ""
-	htkTxt += "\nTab  "
-	htkTxt += "\n\\  "
-	htkTxt += "\nEnter  "
-	htkTxt += "\n🡡 🡣  "
+	htkTxt += "\nTab   "
+	htkTxt += "\n\\   "
+	htkTxt += "\nEnter   "
+	htkTxt += "\n🡡 🡣   "
 
 	return htkTxt
 }

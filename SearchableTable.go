@@ -35,7 +35,7 @@ func NewSearchableTable(sidePane *tview.List, app *tview.Application) *Searchabl
 	t.updateSearchableColumn(t.searchableColumn)
 
 	t.Container.SetDirection(0)
-	t.Container.AddItem(t.SearchBox, 3, 1, false)
+	// t.Container.AddItem(t.SearchBox, 3, 1, false)
 	t.Container.AddItem(t.Table, 0, 1, true)
 
 	t.Table.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
@@ -101,33 +101,29 @@ func (t *SearchableTable) SetSearchableColumn(col int) *SearchableTable {
 
 func (t *SearchableTable) updateSearchableColumn(col int) {
 	t.SearchBox.SetChangedFunc(func(text string) {
-		colNum := t.Table.GetColumnCount()
+		// colNum := t.Table.GetColumnCount()
 
-		for _, hr := range t.hiddenRows {
-			t.Table.InsertRow(hr.index)
+		// for _, hr := range t.hiddenRows {
+		// 	t.Table.InsertRow(hr.index)
 
-			for i := 0; i < colNum; i++ {
-				t.Table.SetCell(hr.index, i, &hr.values[i])
-			}
-		}
+		// 	for i := 0; i < colNum; i++ {
+		// 		t.Table.SetCell(hr.index, i, &hr.values[i])
+		// 	}
+		// }
 
-		t.hiddenRows = []hiddenRow{}
+		// t.hiddenRows = []hiddenRow{}
 
 		//one because of column names
-		for i := 1; i < t.Table.GetRowCount(); i++ {
-			match := fuzzy.MatchFold(text, t.Table.GetCell(i, col).Text)
-
-			if !match {
-				values := []tview.TableCell{}
-
-				for j := 0; j < colNum; j++ {
-					cell := t.Table.GetCell(i, j)
-					values = append(values, *cell)
-				}
-
-				t.hiddenRows = append(t.hiddenRows, hiddenRow{index: i, values: values})
-				t.Table.RemoveRow(i)
+		best, _ := t.Table.GetSelection()
+		rows := t.Table.GetRowCount()
+		for i := 1; i < rows; i++ {
+			rank := fuzzy.RankMatchFold(text, t.Table.GetCell(i, col).Text)
+			if rank > best {
+				best = rank
 			}
 		}
+
+		// t.SearchBox.SetText(string(best))
+		t.Table.Select(best, 0)
 	})
 }
