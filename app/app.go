@@ -210,6 +210,19 @@ func Run() {
 		titleBar.SetTextStyle(tcell.StyleDefault.Attributes(tcell.AttrBold))
 		titleBar.SetTextColor(ui.Theme.PrimaryColor)
 
+		tableHotkeysText := tview.NewTextView()
+		tableHotkeysText.SetText(getTableHotkeysText())
+		tableHotkeysText.SetTextAlign(2)
+		tableHotkeysText.SetBackgroundColor(ui.Theme.Background)
+		tableHotkeysText.SetTextColor(ui.Theme.Foreground)
+		tableHotkeysText.SetTextStyle(tcell.StyleDefault.Attributes(tcell.AttrDim))
+
+		tableHotkeysKeys := tview.NewTextView()
+		tableHotkeysKeys.SetText(getTableHotkeys())
+		tableHotkeysKeys.SetTextAlign(2)
+		tableHotkeysKeys.SetBackgroundColor(ui.Theme.Background)
+		tableHotkeysKeys.SetTextColor(ui.Theme.InEvidenceColor)
+
 		hotkeysText := tview.NewTextView()
 		hotkeysText.SetText(getHotkeysText())
 		hotkeysText.SetTextAlign(2)
@@ -226,6 +239,8 @@ func Run() {
 		topBar.AddItem(titleBar, 0, 1, false)
 		topBar.AddItem(hotkeysText, 17, 0, false)
 		topBar.AddItem(hotkeysKeys, 10, 0, false)
+		topBar.AddItem(tableHotkeysText, 22, 0, false)
+		topBar.AddItem(tableHotkeysKeys, 6, 0, false)
 
 		main1.AddItem(topBar, 8, 0, false)
 	}
@@ -251,21 +266,39 @@ func getTitle() string {
 }
 
 func getHotkeysText() string {
-	htkTxt := ""
-	htkTxt += "\nmove through tabs"
-	htkTxt += "\nfocus search bar"
-	htkTxt += "\nselect element"
-	htkTxt += "\nmove"
+	htkTxt := "Move through tabs"
+	htkTxt += "\nFocus search bar"
+	htkTxt += "\nSelect element"
+	htkTxt += "\nMove"
 
 	return htkTxt
 }
 
 func getHotkeys() string {
-	htkTxt := ""
-	htkTxt += "\nTab   "
+	htkTxt := "Tab   "
 	htkTxt += "\n\\   "
 	htkTxt += "\nEnter   "
 	htkTxt += "\n🡡 🡣   "
+
+	return htkTxt
+}
+
+func getTableHotkeysText() string {
+	htkTxt := "Add topic"
+	htkTxt += "\nEdit topic config"
+	htkTxt += "\nClear topic messages"
+	htkTxt += "\nRecreate topic"
+	htkTxt += "\nDelete topic"
+
+	return htkTxt
+}
+
+func getTableHotkeys() string {
+	htkTxt := "A  "
+	htkTxt += "\nE  "
+	htkTxt += "\nC  "
+	htkTxt += "\nR  "
+	htkTxt += "\nD  "
 
 	return htkTxt
 }
