@@ -24,9 +24,9 @@ func ShowTopicDetail(ui *types.UI, topic string) {
 	ui.TopicDetail.SetTitle(" Topic detail: ")
 	ui.TopicDetail.SetTitleAlign(0)
 
-	ui.View.Clear()
-	ui.View.AddItem(ui.TopicsTable.Container, 0, 2, true)
-	ui.View.AddItem(ui.TopicDetail, 60, 1, false)
+	ui.CentralView.Clear()
+	ui.CentralView.AddItem(ui.TopicsTable.Container, 0, 2, true)
+	ui.CentralView.AddItem(ui.TopicDetail, 60, 1, false)
 
 	detailTitle := tview.NewTextView()
 	detailTitle.SetText("\n " + topic)
@@ -73,20 +73,4 @@ func ShowTopicDetail(ui *types.UI, topic string) {
 	}
 
 	ui.TopicDetail.AddItem(filler, 0, 1, false)
-
-	// detailMenu := tview.NewList()
-	// detailMenu.AddItem("Edit Config", "", '1', func() {})
-	// detailMenu.AddItem("Clear Messages", "", '2', func() {})
-	// detailMenu.AddItem("Recreate Topic", "", '3', func() {})
-	// detailMenu.AddItem("Remove Topic", "", '4', func() {})
-	// detailMenu.SetMainTextColor(ui.Theme.Foreground)
-	// detailMenu.SetBackgroundColor(ui.Theme.Background)
-	// detailMenu.SetSelectedTextColor(ui.Theme.Foreground)
-	// detailMenu.SetSelectedStyle(tcell.StyleDefault.Attributes(tcell.AttrUnderline))
-
-	// ui.TopicDetail.AddItem(detailMenu, 8, 1, false)
-
-	// ui.TopicDetail.SetFocusFunc(func () {
-	// 	ui.App.SetFocus(detailMenu)
-	// })
 }

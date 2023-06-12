@@ -57,11 +57,12 @@ func Run() {
 	brokers, controllerId := kafka.GetBrokers(admin)
 
 	ui := types.UI{
+		MainContainer:  tview.NewFlex(),
 		AdminClient:    admin,
 		Theme:          &Theme,
 		App:            app,
 		SidePane:       SidePane,
-		View:           tview.NewFlex(),
+		CentralView:    tview.NewFlex(),
 		Brokers:        brokers,
 		ControllerId:   controllerId,
 		BrokersTable:   components.NewSearchableTable(SidePane, app),
@@ -87,8 +88,8 @@ func Run() {
 	ui.SidePane.SetSelectedTextColor(ui.Theme.Foreground)
 	ui.SidePane.SetSelectedStyle(tcell.StyleDefault.Attributes(tcell.AttrUnderline))
 
-	ui.View.SetBorder(true)
-	ui.View.SetBackgroundColor(ui.Theme.Background)
+	ui.CentralView.SetBorder(true)
+	ui.CentralView.SetBackgroundColor(ui.Theme.Background)
 
 	ui.BrokersTable.Table.SetTitle(" Brokers ")
 	ui.BrokersTable.Table.SetTitleAlign(0)
@@ -139,16 +140,16 @@ func Run() {
 	})
 
 	ui.SidePane.AddItem("Brokers", "", '1', func() {
-		ui.View.Clear()
-		ui.View.AddItem(ui.BrokersTable.Container, 0, 2, false)
+		ui.CentralView.Clear()
+		ui.CentralView.AddItem(ui.BrokersTable.Container, 0, 2, false)
 		ui.UpdateFunc = views.ShowBrokersView
 		views.ShowBrokersView(&ui)
 		ui.App.SetFocus(ui.BrokersTable.Table)
 	})
 
 	ui.SidePane.AddItem("Topics", "", '2', func() {
-		ui.View.Clear()
-		ui.View.AddItem(ui.TopicsTable.Container, 0, 2, false)
+		ui.CentralView.Clear()
+		ui.CentralView.AddItem(ui.TopicsTable.Container, 0, 2, false)
 
 		ui.UpdateFunc = func(ui *types.UI) {
 			focused := ui.App.GetFocus()
@@ -178,8 +179,8 @@ func Run() {
 	})
 
 	ui.SidePane.AddItem("Consumers", "", '3', func() {
-		ui.View.Clear()
-		ui.View.AddItem(ui.ConsumersTable.Container, 0, 2, false)
+		ui.CentralView.Clear()
+		ui.CentralView.AddItem(ui.ConsumersTable.Container, 0, 2, false)
 		ui.UpdateFunc = views.ShowConsumersView
 		views.ShowConsumersView(&ui)
 		ui.App.SetFocus(ui.ConsumersTable.Table)
@@ -189,67 +190,22 @@ func Run() {
 		return
 	})
 
-	main2 := tview.NewFlex()
-	main2.SetTitle(" Kafka TUI ")
-	main2.AddItem(ui.SidePane, 20, 0, true)
-	main2.AddItem(ui.View, 0, 1, false)
-
-	main1 := tview.NewFlex()
-	main1.SetDirection(0)
+	ui.MainView = tview.NewFlex()
+	ui.MainView.SetTitle(" Kafka TUI ")
+	ui.MainView.AddItem(ui.SidePane, 20, 0, true)
+	ui.MainView.AddItem(ui.CentralView, 0, 1, false)
 
 	if !noTopBar {
-		topBar := tview.NewFlex()
-		topBar.SetBorder(true)
-		topBar.SetBackgroundColor(ui.Theme.Background)
-
-		titleBar := tview.NewTextView()
-		titleBar.SetText(GetTitle())
-		titleBar.SetBackgroundColor(ui.Theme.Background)
-		titleBar.SetTextStyle(tcell.StyleDefault.Attributes(tcell.AttrBold))
-		titleBar.SetTextColor(ui.Theme.PrimaryColor)
-
-		htkTxt1 := tview.NewTextView()
-		htkTxt1.SetText(GetHotkeysText1())
-		htkTxt1.SetTextAlign(2)
-		htkTxt1.SetBackgroundColor(ui.Theme.Background)
-		htkTxt1.SetTextColor(ui.Theme.Foreground)
-		htkTxt1.SetTextStyle(tcell.StyleDefault.Attributes(tcell.AttrDim))
-
-		ktkKeys1 := tview.NewTextView()
-		ktkKeys1.SetText(GetHotkeysKeys1())
-		ktkKeys1.SetTextAlign(2)
-		ktkKeys1.SetBackgroundColor(ui.Theme.Background)
-		ktkKeys1.SetTextColor(ui.Theme.InEvidenceColor)
-
-		htkTxt2 := tview.NewTextView()
-		htkTxt2.SetText(GetHotkeysText2())
-		htkTxt2.SetTextAlign(2)
-		htkTxt2.SetBackgroundColor(ui.Theme.Background)
-		htkTxt2.SetTextColor(ui.Theme.Foreground)
-		htkTxt2.SetTextStyle(tcell.StyleDefault.Attributes(tcell.AttrDim))
-
-		ktkKeys2 := tview.NewTextView()
-		ktkKeys2.SetText(GetHotkeysKeys2())
-		ktkKeys2.SetTextAlign(2)
-		ktkKeys2.SetBackgroundColor(ui.Theme.Background)
-		ktkKeys2.SetTextColor(ui.Theme.InEvidenceColor)
-
-		topBar.AddItem(titleBar, 0, 1, false)
-		topBar.AddItem(htkTxt1, 20, 0, false)
-		topBar.AddItem(ktkKeys1, 12, 0, false)
-		topBar.AddItem(htkTxt2, 23, 0, false)
-		topBar.AddItem(ktkKeys2, 7, 0, false)
-
-		main1.AddItem(topBar, 8, 0, false)
+		AddTopBar(&ui)
 	}
 
-	main1.AddItem(main2, 0, 1, true)
+	ui.MainContainer.SetDirection(0)
+	ui.MainContainer.AddItem(ui.MainView, 0, 1, true)
 
-	app.SetFocus(ui.SidePane)
-	app.EnableMouse(true)
+	ui.App.SetFocus(ui.SidePane)
+	ui.App.EnableMouse(true)
 
-	if err := app.SetRoot(main1, true).Run(); err != nil {
+	if err := ui.App.SetRoot(ui.MainContainer, true).Run(); err != nil {
 		panic(err)
 	}
 }
-

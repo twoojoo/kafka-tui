@@ -14,7 +14,7 @@ func ShowBrokersView(ui *types.UI) {
 	ui.Brokers = brokers
 	ui.ControllerId = controllerId
 
-	ui.View.SetBorder(false)
+	ui.CentralView.SetBorder(false)
 
 	ui.BrokersTable.Table.Clear()
 

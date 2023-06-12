@@ -6,8 +6,9 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-	"github.com/twoojoo/ktui/types"
 	"github.com/twoojoo/ktui/kafka"
+	"github.com/twoojoo/ktui/modals"
+	"github.com/twoojoo/ktui/types"
 	"github.com/twoojoo/ktui/utils"
 )
 
@@ -24,7 +25,7 @@ func ShowTopicsView(ui *types.UI) {
 	sort.Strings(topicNames)
 	ui.TopicsSize = kafka.GetTopicsSize(ui.AdminClient, topicNames)
 
-	ui.View.SetBorder(false)
+	ui.CentralView.SetBorder(false)
 
 	ui.TopicsTable.Table.Clear()
 
@@ -59,4 +60,22 @@ func ShowTopicsView(ui *types.UI) {
 		ui.TopicsTable.Table.SetCell(i, 5, tview.NewTableCell(" "+utils.BytesToString(ui.TopicsSize[topic])+"   ").SetTextColor(ui.Theme.Foreground).SetStyle(tcell.StyleDefault.Attributes(tcell.AttrDim)))
 		i++
 	}
+
+	ui.TopicsTable.Table.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		rune := event.Rune()
+
+		if rune == 'a' {
+			modals.ShowAddTopicModal(ui)
+		} else if rune == 'e' {
+			
+		} else if rune == 'c' {
+
+		} else if rune == 'r' {
+
+		} else if rune == 'd' {
+
+		}
+
+		return event
+	})
 }

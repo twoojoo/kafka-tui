@@ -15,7 +15,7 @@ func ShowConsumersView(ui *types.UI) {
 	ui.ConsumerGroups = kafka.GetConsumersGroups(ui.AdminClient)
 	ui.ConsumerGroupsDescriptions = kafka.GetConsumersGroupsDescription(ui.AdminClient, ui.ConsumerGroups)
 
-	ui.View.SetBorder(false)
+	ui.CentralView.SetBorder(false)
 
 	ui.ConsumersTable.Table.Clear()
 

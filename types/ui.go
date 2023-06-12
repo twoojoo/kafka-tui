@@ -9,10 +9,12 @@ import (
 
 type UI struct {
 	//graphic stuff
-	Theme          *Theme
 	App            *tview.Application
+	Theme          *Theme
+	MainContainer  *tview.Flex
+	MainView       *tview.Flex
 	SidePane       *tview.List
-	View           *tview.Flex
+	CentralView    *tview.Flex
 	BrokersTable   *components.SearchableTable
 	ConsumersTable *components.SearchableTable
 	TopicsTable    *components.SearchableTable
