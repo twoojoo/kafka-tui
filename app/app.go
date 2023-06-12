@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"os"
 	"time"
 
@@ -21,7 +22,19 @@ func Run() {
 	noTopBar := false
 
 	for _, arg := range args {
-		if arg == "--no-top-bar" {
+		if arg == "--version" || arg == "-v" { //VERSION
+			fmt.Println("v" + Version)
+			os.Exit(0)
+		} else if arg == "--help" || arg == "-h" { //HELP
+			fmt.Println("\n  ktui v" + Version)
+			fmt.Println("  A TUI for Apache Kafka")
+			fmt.Println()
+			fmt.Println("  -t, --no-top-bar\t hide top bar" )
+			fmt.Println("  -v, --version\t\t print ktui version")
+			fmt.Println("  -h, --help\t\t help")
+			fmt.Println()
+			os.Exit(0)
+		} else if arg == "--no-top-bar" || arg == "-t" { //NO-TOP-BAR
 			noTopBar = true
 		}
 	}
@@ -181,7 +194,7 @@ func Run() {
 		titleBar.SetBackgroundColor(ui.Theme.Background)
 		titleBar.SetTextStyle(tcell.StyleDefault.Attributes(tcell.AttrBold))
 		titleBar.SetTextColor(ui.Theme.PrimaryColor)
-		
+
 		hotkeysText := tview.NewTextView()
 		hotkeysText.SetText(getHotkeysText())
 		hotkeysText.SetTextAlign(2)
@@ -212,14 +225,13 @@ func Run() {
 	}
 }
 
-
 func getTitle() string {
 	title := " ╷  _  _______ _   _ ___"
 	title += "\n │ | |/ /_   _| | | |_ _|"
 	title += "\n │ | ' /  | | | | | || |"
-	title += "\n │ | . \\  | | | |_| || |"
-	title += "\n │ |_|\\_\\ |_|  \\___/|___| v" + Version + " (by twoojoo)"
-	title += "\n └────────────────────────────────────────────"
+	title += "\n │ | . \\  | | | |_| || |  v" + Version
+	title += "\n │ |_|\\_\\ |_|  \\___/|___| by twoojoo"
+	title += "\n └───────────────────────────────────────"
 	return title
 }
 
@@ -242,7 +254,6 @@ func getHotkeys() string {
 
 	return htkTxt
 }
-
 
 func getKafkaLogo() string {
 	logo := "\n\n"
