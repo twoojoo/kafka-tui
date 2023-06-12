@@ -169,8 +169,6 @@ func Run() {
 			key := event.Key()
 			if key == tcell.KeyRight {
 				ui.App.SetFocus(ui.TopicsTable.Table)
-			} else if key == tcell.KeyLeft {
-				ui.App.SetFocus(ui.TopicDetail)
 			}
 
 			return event
@@ -205,42 +203,42 @@ func Run() {
 		topBar.SetBackgroundColor(ui.Theme.Background)
 
 		titleBar := tview.NewTextView()
-		titleBar.SetText(getTitle())
+		titleBar.SetText(GetTitle())
 		titleBar.SetBackgroundColor(ui.Theme.Background)
 		titleBar.SetTextStyle(tcell.StyleDefault.Attributes(tcell.AttrBold))
 		titleBar.SetTextColor(ui.Theme.PrimaryColor)
 
-		tableHotkeysText := tview.NewTextView()
-		tableHotkeysText.SetText(getTableHotkeysText())
-		tableHotkeysText.SetTextAlign(2)
-		tableHotkeysText.SetBackgroundColor(ui.Theme.Background)
-		tableHotkeysText.SetTextColor(ui.Theme.Foreground)
-		tableHotkeysText.SetTextStyle(tcell.StyleDefault.Attributes(tcell.AttrDim))
+		htkTxt1 := tview.NewTextView()
+		htkTxt1.SetText(GetHotkeysText1())
+		htkTxt1.SetTextAlign(2)
+		htkTxt1.SetBackgroundColor(ui.Theme.Background)
+		htkTxt1.SetTextColor(ui.Theme.Foreground)
+		htkTxt1.SetTextStyle(tcell.StyleDefault.Attributes(tcell.AttrDim))
 
-		tableHotkeysKeys := tview.NewTextView()
-		tableHotkeysKeys.SetText(getTableHotkeys())
-		tableHotkeysKeys.SetTextAlign(2)
-		tableHotkeysKeys.SetBackgroundColor(ui.Theme.Background)
-		tableHotkeysKeys.SetTextColor(ui.Theme.InEvidenceColor)
+		ktkKeys1 := tview.NewTextView()
+		ktkKeys1.SetText(GetHotkeysKeys1())
+		ktkKeys1.SetTextAlign(2)
+		ktkKeys1.SetBackgroundColor(ui.Theme.Background)
+		ktkKeys1.SetTextColor(ui.Theme.InEvidenceColor)
 
-		hotkeysText := tview.NewTextView()
-		hotkeysText.SetText(getHotkeysText())
-		hotkeysText.SetTextAlign(2)
-		hotkeysText.SetBackgroundColor(ui.Theme.Background)
-		hotkeysText.SetTextColor(ui.Theme.Foreground)
-		hotkeysText.SetTextStyle(tcell.StyleDefault.Attributes(tcell.AttrDim))
+		htkTxt2 := tview.NewTextView()
+		htkTxt2.SetText(GetHotkeysText2())
+		htkTxt2.SetTextAlign(2)
+		htkTxt2.SetBackgroundColor(ui.Theme.Background)
+		htkTxt2.SetTextColor(ui.Theme.Foreground)
+		htkTxt2.SetTextStyle(tcell.StyleDefault.Attributes(tcell.AttrDim))
 
-		hotkeysKeys := tview.NewTextView()
-		hotkeysKeys.SetText(getHotkeys())
-		hotkeysKeys.SetTextAlign(2)
-		hotkeysKeys.SetBackgroundColor(ui.Theme.Background)
-		hotkeysKeys.SetTextColor(ui.Theme.InEvidenceColor)
+		ktkKeys2 := tview.NewTextView()
+		ktkKeys2.SetText(GetHotkeysKeys2())
+		ktkKeys2.SetTextAlign(2)
+		ktkKeys2.SetBackgroundColor(ui.Theme.Background)
+		ktkKeys2.SetTextColor(ui.Theme.InEvidenceColor)
 
 		topBar.AddItem(titleBar, 0, 1, false)
-		topBar.AddItem(hotkeysText, 17, 0, false)
-		topBar.AddItem(hotkeysKeys, 10, 0, false)
-		topBar.AddItem(tableHotkeysText, 22, 0, false)
-		topBar.AddItem(tableHotkeysKeys, 6, 0, false)
+		topBar.AddItem(htkTxt1, 20, 0, false)
+		topBar.AddItem(ktkKeys1, 12, 0, false)
+		topBar.AddItem(htkTxt2, 23, 0, false)
+		topBar.AddItem(ktkKeys2, 7, 0, false)
 
 		main1.AddItem(topBar, 8, 0, false)
 	}
@@ -255,70 +253,3 @@ func Run() {
 	}
 }
 
-func getTitle() string {
-	title := " ╷  _  _______ _   _ ___"
-	title += "\n │ | |/ /_   _| | | |_ _|"
-	title += "\n │ | ' /  | | | | | || |"
-	title += "\n │ | . \\  | | | |_| || |  v" + Version
-	title += "\n │ |_|\\_\\ |_|  \\___/|___| by twoojoo"
-	title += "\n └───────────────────────────────────────"
-	return title
-}
-
-func getHotkeysText() string {
-	htkTxt := "Move through tabs"
-	htkTxt += "\nFocus search bar"
-	htkTxt += "\nSelect element"
-	htkTxt += "\nMove"
-
-	return htkTxt
-}
-
-func getHotkeys() string {
-	htkTxt := "Tab   "
-	htkTxt += "\n\\   "
-	htkTxt += "\nEnter   "
-	htkTxt += "\n🡡 🡣   "
-
-	return htkTxt
-}
-
-func getTableHotkeysText() string {
-	htkTxt := "Add topic"
-	htkTxt += "\nEdit topic config"
-	htkTxt += "\nClear topic messages"
-	htkTxt += "\nRecreate topic"
-	htkTxt += "\nDelete topic"
-
-	return htkTxt
-}
-
-func getTableHotkeys() string {
-	htkTxt := "A  "
-	htkTxt += "\nE  "
-	htkTxt += "\nC  "
-	htkTxt += "\nR  "
-	htkTxt += "\nD  "
-
-	return htkTxt
-}
-
-func getKafkaLogo() string {
-	logo := "\n\n"
-	logo += "                    @@@@@@\n"
-	logo += "                   @@    @@@\n"
-	logo += "                   @@    @@@\n"
-	logo += "                    @@@@@@     @@@@@@@@\n"
-	logo += "                      @@      @@@    @@@\n"
-	logo += "                   @@@@@@@@  %@@@@  @@@,\n"
-	logo += "                 #@@@    .@@@%   &@@@\n"
-	logo += "                 @@@       @@&\n"
-	logo += "                  @@@    @@@@@   @@@@\n"
-	logo += "                   @@@@@@@   @@@%   @@@\n"
-	logo += "                      @@      @@@    @@@\n"
-	logo += "                    @@@@@@*    %@@@@@@@\n"
-	logo += "                   @@    @@@\n"
-	logo += "                   @@    @@@\n"
-	logo += "                    @@@@@@"
-	return logo
-}
