@@ -4,6 +4,8 @@ import (
 	"os"
 	"sort"
 	"strconv"
+	"strings"
+
 	// "strings"
 	"time"
 
@@ -158,7 +160,7 @@ func main() {
 
 	ui.sidePane.AddItem("Brokers", "", '1', func() {
 		ui.view.Clear()
-		ui.view.AddItem(ui.brokersTable.Container, 0, 1, false)
+		ui.view.AddItem(ui.brokersTable.Container, 0, 2, false)
 		ui.updateFunc = showBrokersView
 		showBrokersView(&ui)
 		ui.app.SetFocus(ui.brokersTable.Table)
@@ -166,7 +168,7 @@ func main() {
 
 	ui.sidePane.AddItem("Topics", "", '2', func() {
 		ui.view.Clear()
-		ui.view.AddItem(ui.topicsTable.Container, 0, 1, false)
+		ui.view.AddItem(ui.topicsTable.Container, 0, 2, false)
 		ui.updateFunc = showTopicsView
 		showTopicsView(&ui)
 		ui.app.SetFocus(ui.topicsTable.Table)
@@ -174,7 +176,7 @@ func main() {
 
 	ui.sidePane.AddItem("Consumers", "", '3', func() {
 		ui.view.Clear()
-		ui.view.AddItem(ui.consumersTable.Container, 0, 1, false)
+		ui.view.AddItem(ui.consumersTable.Container, 0, 2, false)
 		ui.updateFunc = showConsumersView
 		showConsumersView(&ui)
 		ui.app.SetFocus(ui.consumersTable.Table)
@@ -370,6 +372,11 @@ func showTopicsView(ui *UI) {
 }
 
 func showTopicDetail(ui *UI, topic string) {
+	topic = strings.Trim(topic, " ")
+	info := ui.topics[topic]
+	metadata := getTopicMetadata(ui, topic)
+
+	// ui.topicDetail.Clear()
 	ui.topicDetail = tview.NewFlex()
 	ui.topicDetail.SetBorder(true)
 	ui.topicDetail.SetBackgroundColor(ui.theme.Background)
@@ -378,15 +385,41 @@ func showTopicDetail(ui *UI, topic string) {
 	ui.topicDetail.SetTitleAlign(0)
 
 	ui.view.Clear()
-	ui.view.AddItem(ui.topicsTable.Container, 0, 1, true)
+	ui.view.AddItem(ui.topicsTable.Container, 0, 2, true)
 	ui.view.AddItem(ui.topicDetail, 0, 1, false)
 
 	detailTitle := tview.NewTextView()
-	detailTitle.SetText(topic)
+	detailTitle.SetText("\n " + topic)
 	detailTitle.SetBackgroundColor(ui.theme.Background)
 	detailTitle.SetTextColor(ui.theme.PrimaryColor)
 
-	ui.topicDetail.AddItem(detailTitle, 0, 1, false)
+	kind := "external"
+	if metadata.IsInternal {
+		kind = "internal"
+	}
+	kindText := buildDetailText(ui, " kind: "+kind)
+	sizeText := buildDetailText(ui, " size: "+bytesToString(ui.topicsSize[topic]))
+	partitionsText := buildDetailText(ui, " partitions: "+strconv.Itoa(len(metadata.Partitions)))
+	messagesText := buildDetailText(ui, " messages: ")
+	replicaText := buildDetailText(ui, " rep. factor: "+strconv.Itoa(int(info.ReplicationFactor)))
+
+	filler := tview.NewBox()
+	filler.SetBackgroundColor(ui.theme.Background)
+
+	ui.topicDetail.AddItem(detailTitle, 3, 0, false)
+	ui.topicDetail.AddItem(kindText, 1, 0, false)
+	ui.topicDetail.AddItem(partitionsText, 1, 0, false)
+	ui.topicDetail.AddItem(replicaText, 1, 0, false)
+	ui.topicDetail.AddItem(messagesText, 1, 0, false)
+	ui.topicDetail.AddItem(sizeText, 1, 0, false)
+	ui.topicDetail.AddItem(buildDetailText(ui, ""), 1, 0, false)
+
+	for k, v := range info.ConfigEntries {
+		text := buildDetailText(ui, " "+k+": "+*v)
+		ui.topicDetail.AddItem(text, 1, 0, false)
+	}
+
+	ui.topicDetail.AddItem(filler, 0, 1, false)
 }
 
 func bytesToString(bytes int) string {
@@ -432,4 +465,25 @@ func getHotkeys() string {
 	htkTxt += "\n🡡 🡣   "
 
 	return htkTxt
+}
+
+func getTopicMetadata(ui *UI, topic string) *sarama.TopicMetadata {
+	for _, item := range ui.topicsMetadata {
+		if item.Name == topic {
+			return item
+		}
+	}
+
+	panic("no such topic")
+}
+
+func buildDetailText(ui *UI, text string) *tview.TextView {
+	// if fg == nil {
+	// 	fg = ui.theme.Foreground
+	// }
+	box := tview.NewTextView()
+	box.SetText(text)
+	box.SetBackgroundColor(ui.theme.Background)
+	box.SetTextColor(ui.theme.Foreground)
+	return box
 }
