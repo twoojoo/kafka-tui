@@ -386,7 +386,7 @@ func showTopicDetail(ui *UI, topic string) {
 
 	ui.view.Clear()
 	ui.view.AddItem(ui.topicsTable.Container, 0, 2, true)
-	ui.view.AddItem(ui.topicDetail, 0, 1, false)
+	ui.view.AddItem(ui.topicDetail, 60, 1, false)
 
 	detailTitle := tview.NewTextView()
 	detailTitle.SetText("\n " + topic)
@@ -403,7 +403,9 @@ func showTopicDetail(ui *UI, topic string) {
 	messagesText := buildDetailText(ui, " messages: ")
 	replicaText := buildDetailText(ui, " rep. factor: "+strconv.Itoa(int(info.ReplicationFactor)))
 
-	filler := tview.NewBox()
+	filler := tview.NewTextView()
+	// filler.SetText(getKafkaLogo())
+	filler.SetTextColor(ui.theme.PrimaryColor)
 	filler.SetBackgroundColor(ui.theme.Background)
 
 	ui.topicDetail.AddItem(detailTitle, 3, 0, false)
@@ -486,4 +488,24 @@ func buildDetailText(ui *UI, text string) *tview.TextView {
 	box.SetBackgroundColor(ui.theme.Background)
 	box.SetTextColor(ui.theme.Foreground)
 	return box
+}
+
+func getKafkaLogo() string {
+	logo := "\n\n"
+	logo += "                    @@@@@@\n"
+	logo += "                   @@    @@@\n"
+	logo += "                   @@    @@@\n"
+	logo += "                    @@@@@@     @@@@@@@@\n"
+	logo += "                      @@      @@@    @@@\n"
+	logo += "                   @@@@@@@@  %@@@@  @@@,\n"
+	logo += "                 #@@@    .@@@%   &@@@\n"
+	logo += "                 @@@       @@&\n"
+	logo += "                  @@@    @@@@@   @@@@\n"
+	logo += "                   @@@@@@@   @@@%   @@@\n"
+	logo += "                      @@      @@@    @@@\n"
+	logo += "                    @@@@@@*    %@@@@@@@\n"
+	logo += "                   @@    @@@\n"
+	logo += "                   @@    @@@\n"
+	logo += "                    @@@@@@"
+	return logo
 }
