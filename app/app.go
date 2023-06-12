@@ -2,9 +2,7 @@ package app
 
 import (
 	"os"
-	"sort"
 	"strconv"
-	"strings"
 
 	// "strings"
 	"time"
@@ -12,8 +10,8 @@ import (
 	"github.com/Shopify/sarama"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+	"github.com/twoojoo/ktui/components"
 	"github.com/twoojoo/ktui/kafka"
-	"github.com/twoojoo/ktui/utils"
 	"github.com/twoojoo/ktui/types"
 	"github.com/twoojoo/ktui/views"
 )
@@ -57,9 +55,9 @@ func Run() {
 		View:           tview.NewFlex(),
 		Brokers:        brokers,
 		ControllerId:   controllerId,
-		BrokersTable:   utils.NewSearchableTable(SidePane, app),
-		ConsumersTable: utils.NewSearchableTable(SidePane, app),
-		TopicsTable:    utils.NewSearchableTable(SidePane, app),
+		BrokersTable:   components.NewSearchableTable(SidePane, app),
+		ConsumersTable: components.NewSearchableTable(SidePane, app),
+		TopicsTable:    components.NewSearchableTable(SidePane, app),
 		Topics:         topics,
 		UpdateFunc:     func(*types.UI) {},
 	}
@@ -127,7 +125,7 @@ func Run() {
 		}
 
 		topic := ui.TopicsTable.Table.GetCell(row, 0).Text
-		showTopicDetail(&ui, topic)
+		views.ShowTopicDetail(&ui, topic)
 	})
 
 	ui.SidePane.AddItem("Brokers", "", '1', func() {
@@ -147,14 +145,14 @@ func Run() {
 			ui.App.SetFocus(ui.TopicsTable.Table)
 			row, _ := ui.TopicsTable.Table.GetSelection()
 			topic := ui.TopicsTable.Table.GetCell(row, 0).Text
-			showTopicDetail(ui, topic)
+			views.ShowTopicDetail(ui, topic)
 		}
 
 		views.ShowTopicsView(&ui)
 		ui.App.SetFocus(ui.TopicsTable.Table)
 		ui.TopicsTable.Table.Select(1, 0)
 		topic := ui.TopicsTable.Table.GetCell(1, 0).Text
-		showTopicDetail(&ui, topic)
+		views.ShowTopicDetail(&ui, topic)
 	})
 
 	ui.SidePane.AddItem("Consumers", "", '3', func() {
@@ -308,81 +306,6 @@ func showConsumersView(ui *types.UI) {
 	}
 }
 
-func showTopicDetail(ui *types.UI, topic string) {
-	topic = strings.Trim(topic, " ")
-	info := ui.Topics[topic]
-	metadata := getTopicMetadata(ui, topic)
-
-	// ui.TopicDetail.Clear()
-	ui.TopicDetail = tview.NewFlex()
-	ui.TopicDetail.SetBorder(true)
-	ui.TopicDetail.SetBackgroundColor(ui.Theme.Background)
-	ui.TopicDetail.SetDirection(0)
-	ui.TopicDetail.SetTitle(" Topic detail: ")
-	ui.TopicDetail.SetTitleAlign(0)
-
-	ui.View.Clear()
-	ui.View.AddItem(ui.TopicsTable.Container, 0, 2, true)
-	ui.View.AddItem(ui.TopicDetail, 60, 1, false)
-
-	detailTitle := tview.NewTextView()
-	detailTitle.SetText("\n " + topic)
-	detailTitle.SetBackgroundColor(ui.Theme.Background)
-	detailTitle.SetTextStyle(tcell.StyleDefault.Attributes(tcell.AttrBold))
-	detailTitle.SetTextColor(ui.Theme.PrimaryColor)
-
-	kindText := buildDetailText(ui, " - internal: "+strconv.FormatBool(metadata.IsInternal))
-	sizeText := buildDetailText(ui, " - size: "+utils.BytesToString(ui.TopicsSize[topic]))
-	partitionsText := buildDetailText(ui, " - partitions: "+strconv.Itoa(len(metadata.Partitions)))
-	messagesText := buildDetailText(ui, " - messages: ")
-	replicaText := buildDetailText(ui, " - rep. factor: "+strconv.Itoa(int(info.ReplicationFactor)))
-
-	filler := tview.NewTextView()
-	filler.SetTextColor(ui.Theme.PrimaryColor)
-	filler.SetBackgroundColor(ui.Theme.Background)
-
-	ui.TopicDetail.AddItem(detailTitle, 3, 0, false)
-
-	mainSubtitle := tview.NewTextView()
-	mainSubtitle.SetBackgroundColor(ui.Theme.Background)
-	mainSubtitle.SetText(" Info:")
-	mainSubtitle.SetTextColor(ui.Theme.Foreground)
-	ui.TopicDetail.AddItem(mainSubtitle, 1, 0, false)
-
-	ui.TopicDetail.AddItem(kindText, 1, 0, false)
-	ui.TopicDetail.AddItem(partitionsText, 1, 0, false)
-	ui.TopicDetail.AddItem(replicaText, 1, 0, false)
-	ui.TopicDetail.AddItem(messagesText, 1, 0, false)
-	ui.TopicDetail.AddItem(sizeText, 1, 0, false)
-	ui.TopicDetail.AddItem(buildDetailText(ui, ""), 1, 0, false)
-
-	sortedConfigNames := sortMapKeys(info.ConfigEntries)
-
-	cfgSubtitle := tview.NewTextView()
-	cfgSubtitle.SetBackgroundColor(ui.Theme.Background)
-	cfgSubtitle.SetText(" Config:")
-	cfgSubtitle.SetTextColor(ui.Theme.Foreground)
-	ui.TopicDetail.AddItem(cfgSubtitle, 1, 0, false)
-
-	for _, name := range sortedConfigNames {
-		text := buildDetailText(ui, " - "+name+": "+*info.ConfigEntries[name])
-		ui.TopicDetail.AddItem(text, 1, 0, false)
-	}
-
-	ui.TopicDetail.AddItem(filler, 0, 1, false)
-
-	detailMenu := tview.NewList()
-	detailMenu.AddItem("Edit Config", "", '1', func() {})
-	detailMenu.AddItem("Clear Messages", "", '2', func() {})
-	detailMenu.AddItem("Recreate Topic", "", '3', func() {})
-	detailMenu.AddItem("Remove Topic", "", '4', func() {})
-	detailMenu.SetMainTextColor(ui.Theme.Foreground)
-	detailMenu.SetBackgroundColor(ui.Theme.Background)
-	detailMenu.SetSelectedTextColor(ui.Theme.Foreground)
-	detailMenu.SetSelectedStyle(tcell.StyleDefault.Attributes(tcell.AttrUnderline))
-
-	ui.TopicDetail.AddItem(detailMenu, 8, 1, false)
-}
 
 func getTitle() string {
 	title := " ╷  _  _______ _   _ ___"
@@ -414,26 +337,6 @@ func getHotkeys() string {
 	return htkTxt
 }
 
-func getTopicMetadata(ui *types.UI, topic string) *sarama.TopicMetadata {
-	for _, item := range ui.TopicsMetadata {
-		if item.Name == topic {
-			return item
-		}
-	}
-
-	panic("no such topic: " + topic)
-}
-
-func buildDetailText(ui *types.UI, text string) *tview.TextView {
-	// if fg == nil {
-	// 	fg = ui.Theme.Foreground
-	// }
-	box := tview.NewTextView()
-	box.SetText(text)
-	box.SetBackgroundColor(ui.Theme.Background)
-	box.SetTextStyle(tcell.StyleDefault.Attributes(tcell.AttrDim))
-	return box
-}
 
 func getKafkaLogo() string {
 	logo := "\n\n"
@@ -453,13 +356,4 @@ func getKafkaLogo() string {
 	logo += "                   @@    @@@\n"
 	logo += "                    @@@@@@"
 	return logo
-}
-
-func sortMapKeys[T any](m map[string]T) []string {
-	keys := make([]string, 0, len(m))
-	for k := range m {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	return keys
 }

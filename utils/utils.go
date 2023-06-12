@@ -1,6 +1,13 @@
 package utils
 
-import "strconv"
+import (
+	"sort"
+	"strconv"
+
+	"github.com/gdamore/tcell/v2"
+	"github.com/rivo/tview"
+	"github.com/twoojoo/ktui/types"
+)
 
 func BytesToString(bytes int) string {
 	m := 1024 //multiplier
@@ -16,4 +23,21 @@ func BytesToString(bytes int) string {
 	} else {
 		return strconv.Itoa((((bytes/m)/m)/m)/m) + " TB"
 	}
+}
+
+func SortMapKeys[T any](m map[string]T) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
+}
+
+func BuildDetailText(ui *types.UI, text string) *tview.TextView {
+	box := tview.NewTextView()
+	box.SetText(text)
+	box.SetBackgroundColor(ui.Theme.Background)
+	box.SetTextStyle(tcell.StyleDefault.Attributes(tcell.AttrDim))
+	return box
 }

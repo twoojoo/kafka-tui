@@ -4,7 +4,7 @@ import (
 	"github.com/Shopify/sarama"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-	"github.com/twoojoo/ktui/utils"
+	"github.com/twoojoo/ktui/components"
 )
 
 type UI struct {
@@ -13,9 +13,9 @@ type UI struct {
 	App            *tview.Application
 	SidePane       *tview.List
 	View           *tview.Flex
-	BrokersTable   *utils.SearchableTable
-	ConsumersTable *utils.SearchableTable
-	TopicsTable    *utils.SearchableTable
+	BrokersTable   *components.SearchableTable
+	ConsumersTable *components.SearchableTable
+	TopicsTable    *components.SearchableTable
 	TopicDetail    *tview.Flex
 
 	UpdateFunc func(*UI)

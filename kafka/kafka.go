@@ -2,6 +2,7 @@ package kafka
 
 import (
 	"github.com/Shopify/sarama"
+	"github.com/twoojoo/ktui/types"
 )
 
 func GetAdminClient() *sarama.ClusterAdmin {
@@ -112,10 +113,12 @@ func includes[T comparable](slice *[]T, value T) bool {
 	return false
 }
 
-// func main() {
-// 	admin := GetAdminClient()
-// 	desc := GetLogDirsDescriptions(admin)
-// 	// var map1 *sarama.OffsetFetchResponseBlock = offset.Blocks["sp-gpcs-reservations-raw"][0]
-// 	topic := desc[0][0].Topics[0].Partitions
-// 	fmt.Println()
-// }
+func GetTopicMetadata(ui *types.UI, topic string) *sarama.TopicMetadata {
+	for _, item := range ui.TopicsMetadata {
+		if item.Name == topic {
+			return item
+		}
+	}
+
+	panic("no such topic: " + topic)
+}
