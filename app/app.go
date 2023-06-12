@@ -2,11 +2,8 @@ package app
 
 import (
 	"os"
-	"strconv"
-
 	"time"
 
-	"github.com/Shopify/sarama"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 	"github.com/twoojoo/ktui/components"
@@ -130,8 +127,8 @@ func Run() {
 	ui.SidePane.AddItem("Brokers", "", '1', func() {
 		ui.View.Clear()
 		ui.View.AddItem(ui.BrokersTable.Container, 0, 2, false)
-		ui.UpdateFunc = showBrokersView
-		showBrokersView(&ui)
+		ui.UpdateFunc = views.ShowBrokersView
+		views.ShowBrokersView(&ui)
 		ui.App.SetFocus(ui.BrokersTable.Table)
 	})
 
@@ -157,8 +154,8 @@ func Run() {
 	ui.SidePane.AddItem("Consumers", "", '3', func() {
 		ui.View.Clear()
 		ui.View.AddItem(ui.ConsumersTable.Container, 0, 2, false)
-		ui.UpdateFunc = showConsumersView
-		showConsumersView(&ui)
+		ui.UpdateFunc = views.ShowConsumersView
+		views.ShowConsumersView(&ui)
 		ui.App.SetFocus(ui.ConsumersTable.Table)
 	})
 
@@ -212,96 +209,6 @@ func Run() {
 
 	if err := app.SetRoot(main1, true).Run(); err != nil {
 		panic(err)
-	}
-}
-
-func showBrokersView(ui *types.UI) {
-	brokers, controllerId := kafka.GetBrokers(ui.AdminClient)
-	ui.Brokers = brokers
-	ui.ControllerId = controllerId
-
-	ui.View.SetBorder(false)
-
-	ui.BrokersTable.Table.Clear()
-
-	for i, broker := range ui.Brokers {
-
-		ui.BrokersTable.SetColumnNames([]string{
-			" ID   ",
-			" Address   ",
-			// " N° Partitions   ",
-			// " Lag   ",
-			// " Coordinator   ",
-			// " State   ",
-		}, ui.Theme.PrimaryColor)
-
-		// i := 1
-		// for group, info := range ui.consumerGroups {
-
-		// 	var description *sarama.GroupDescription
-		// 	for _, item := range ui.consumerGroupsDescriptions {
-		// 		if item.GroupId == group {
-		// 			description = item
-		// 			break
-		// 		}
-		// 	}
-
-		// 	stateCell := tview.NewTableCell(" " + description.State + "   ")
-		// 	if description.State == "Stable" {
-		// 		stateCell = stateCell.SetTextColor(ui.Theme.InfoColor)
-		// 	} else {
-		// 		stateCell = stateCell.SetTextColor(ui.Theme.ErrorColor)
-		// 	}
-
-		ui.BrokersTable.Table.SetCell(i+1, 0, tview.NewTableCell(" "+strconv.Itoa(int(broker.ID()))+"   ").SetTextColor(ui.Theme.InEvidenceColor))
-		ui.BrokersTable.Table.SetCell(i+1, 1, tview.NewTableCell(" "+broker.Addr()+"   ").SetTextColor(ui.Theme.Foreground))
-		// 	ui.ConsumersTable.Table.SetCell(i, 2, tview.NewTableCell(" "+info+"   ").SetTextColor(ui.Theme.Foreground))
-		// 	ui.ConsumersTable.Table.SetCell(i, 5, stateCell)
-		// 	i++
-	}
-}
-
-func showConsumersView(ui *types.UI) {
-	ui.Topics = kafka.GetTopics(ui.AdminClient)
-	ui.ConsumerGroups = kafka.GetConsumersGroups(ui.AdminClient)
-	ui.ConsumerGroupsDescriptions = kafka.GetConsumersGroupsDescription(ui.AdminClient, ui.ConsumerGroups)
-
-	ui.View.SetBorder(false)
-
-	ui.ConsumersTable.Table.Clear()
-
-	ui.ConsumersTable.SetColumnNames([]string{
-		" Group ID   ",
-		" N° Members   ",
-		" N° Partitions   ",
-		" Lag   ",
-		" Coordinator   ",
-		" State   ",
-	}, ui.Theme.PrimaryColor)
-
-	i := 1
-	for group, info := range ui.ConsumerGroups {
-
-		var description *sarama.GroupDescription
-		for _, item := range ui.ConsumerGroupsDescriptions {
-			if item.GroupId == group {
-				description = item
-				break
-			}
-		}
-
-		stateCell := tview.NewTableCell(" " + description.State + "   ")
-		if description.State == "Stable" {
-			stateCell = stateCell.SetTextColor(ui.Theme.InfoColor)
-		} else {
-			stateCell = stateCell.SetTextColor(ui.Theme.ErrorColor)
-		}
-
-		ui.ConsumersTable.Table.SetCell(i, 0, tview.NewTableCell(" "+group+"   ").SetTextColor(ui.Theme.InEvidenceColor))
-		ui.ConsumersTable.Table.SetCell(i, 1, tview.NewTableCell(" "+strconv.Itoa(len(description.Members))+"   ").SetTextColor(ui.Theme.Foreground))
-		ui.ConsumersTable.Table.SetCell(i, 2, tview.NewTableCell(" "+info+"   ").SetTextColor(ui.Theme.Foreground))
-		ui.ConsumersTable.Table.SetCell(i, 5, stateCell)
-		i++
 	}
 }
 
