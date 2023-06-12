@@ -85,4 +85,8 @@ func ShowTopicDetail(ui *types.UI, topic string) {
 	detailMenu.SetSelectedStyle(tcell.StyleDefault.Attributes(tcell.AttrUnderline))
 
 	ui.TopicDetail.AddItem(detailMenu, 8, 1, false)
+
+	ui.TopicDetail.SetFocusFunc(func () {
+		ui.App.SetFocus(detailMenu)
+	})
 }

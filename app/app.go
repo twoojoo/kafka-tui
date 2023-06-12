@@ -29,7 +29,7 @@ func Run() {
 			fmt.Println("\n  ktui v" + Version)
 			fmt.Println("  A TUI for Apache Kafka")
 			fmt.Println()
-			fmt.Println("  -t, --no-top-bar\t hide top bar" )
+			fmt.Println("  -t, --no-top-bar\t hide top bar")
 			fmt.Println("  -v, --version\t\t print ktui version")
 			fmt.Println("  -h, --help\t\t help")
 			fmt.Println()
@@ -75,6 +75,7 @@ func Run() {
 	go func(ui *types.UI) {
 		for {
 			time.Sleep(UpdateRateSec * time.Second)
+
 			ui.UpdateFunc(ui)
 			ui.App.Draw()
 		}
@@ -150,18 +151,32 @@ func Run() {
 		ui.View.AddItem(ui.TopicsTable.Container, 0, 2, false)
 
 		ui.UpdateFunc = func(ui *types.UI) {
+			focused := ui.App.GetFocus()
+			defer ui.App.SetFocus(focused)
+
 			views.ShowTopicsView(ui)
-			ui.App.SetFocus(ui.TopicsTable.Table)
 			row, _ := ui.TopicsTable.Table.GetSelection()
 			topic := ui.TopicsTable.Table.GetCell(row, 0).Text
 			views.ShowTopicDetail(ui, topic)
 		}
 
 		views.ShowTopicsView(&ui)
-		ui.App.SetFocus(ui.TopicsTable.Table)
 		ui.TopicsTable.Table.Select(1, 0)
 		topic := ui.TopicsTable.Table.GetCell(1, 0).Text
 		views.ShowTopicDetail(&ui, topic)
+
+		ui.SidePane.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+			key := event.Key()
+			if key == tcell.KeyRight {
+				ui.App.SetFocus(ui.TopicsTable.Table)
+			} else if key == tcell.KeyLeft {
+				ui.App.SetFocus(ui.TopicDetail)
+			}
+
+			return event
+		})
+
+		ui.App.SetFocus(ui.TopicsTable.Table)
 	})
 
 	ui.SidePane.AddItem("Consumers", "", '3', func() {

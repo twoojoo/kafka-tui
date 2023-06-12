@@ -54,9 +54,10 @@ func NewSearchableTable(sidePane *tview.List, app *tview.Application) *Searchabl
 			t.app.SetFocus(t.SearchBox)
 		} else if key == tcell.KeyEscape ||
 			key == tcell.KeyBackspace ||
-			key == tcell.KeyTab {
+			key == tcell.KeyTab ||
+			key == tcell.KeyLeft {
 			app.SetFocus(sidePane)
-		}
+		} 
 
 		return event
 	})
