@@ -88,7 +88,7 @@ func (t *SearchableTable) SetColumnNames(columns []string, color tcell.Color) *S
 
 func (t *SearchableTable) printColumnNames(color tcell.Color) *SearchableTable {
 	for i := 0; i < len(t.columnNames); i++ {
-		t.Table.SetCell(0, i, tview.NewTableCell(t.columnNames[i]).SetTextColor(color).SetSelectable(false))
+		t.Table.SetCell(0, i, tview.NewTableCell(t.columnNames[i]).SetStyle(tcell.StyleDefault.Attributes(tcell.AttrBold)).SetTextColor(color).SetSelectable(false))
 	}
 
 	return t

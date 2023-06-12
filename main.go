@@ -107,7 +107,6 @@ func main() {
 	ui.sidePane.SetBorder(true)
 	ui.sidePane.SetBackgroundColor(ui.theme.Background)
 	ui.sidePane.SetMainTextColor(ui.theme.Foreground)
-	// ui.sidePane.SetSelectedBackgroundColor(ui.theme.PrimaryColor)
 	ui.sidePane.SetSelectedTextColor(ui.theme.Foreground)
 	ui.sidePane.SetSelectedStyle(tcell.StyleDefault.Attributes(tcell.AttrUnderline))
 
@@ -153,7 +152,11 @@ func main() {
 	ui.topicsTable.SearchBox.SetBackgroundColor(ui.theme.Background)
 	ui.topicsTable.SearchBox.SetFieldBackgroundColor(ui.theme.Background)
 
-	ui.topicsTable.Table.SetSelectedFunc(func(row int, _ int) {
+	ui.topicsTable.Table.SetSelectionChangedFunc(func(row int, _ int) {
+		if row < 1 {
+			return
+		}
+
 		topic := ui.topicsTable.Table.GetCell(row, 0).Text
 		showTopicDetail(&ui, topic)
 	})
@@ -169,9 +172,20 @@ func main() {
 	ui.sidePane.AddItem("Topics", "", '2', func() {
 		ui.view.Clear()
 		ui.view.AddItem(ui.topicsTable.Container, 0, 2, false)
-		ui.updateFunc = showTopicsView
+
+		ui.updateFunc = func(ui *UI) {
+			showTopicsView(ui)
+			ui.app.SetFocus(ui.topicsTable.Table)
+			row, _ := ui.topicsTable.Table.GetSelection()
+			topic := ui.topicsTable.Table.GetCell(row, 0).Text
+			showTopicDetail(ui, topic)
+		}
+
 		showTopicsView(&ui)
 		ui.app.SetFocus(ui.topicsTable.Table)
+		ui.topicsTable.Table.Select(1, 0)
+		topic := ui.topicsTable.Table.GetCell(1, 0).Text
+		showTopicDetail(&ui, topic)
 	})
 
 	ui.sidePane.AddItem("Consumers", "", '3', func() {
@@ -180,6 +194,10 @@ func main() {
 		ui.updateFunc = showConsumersView
 		showConsumersView(&ui)
 		ui.app.SetFocus(ui.consumersTable.Table)
+	})
+
+	ui.sidePane.AddItem("ACLs", "", '4', func() {
+		return
 	})
 
 	main2 := tview.NewFlex()
@@ -319,10 +337,10 @@ func showTopicsView(ui *UI) {
 		}
 
 		ui.topicsTable.Table.SetCell(i, 0, tview.NewTableCell(" "+topic+"   ").SetTextColor(ui.theme.InEvidenceColor))
-		ui.topicsTable.Table.SetCell(i, 1, tview.NewTableCell(" "+isInternal+"   ").SetTextColor(ui.theme.Foreground))
-		ui.topicsTable.Table.SetCell(i, 2, tview.NewTableCell(" "+partitions+"   ").SetTextColor(ui.theme.Foreground))
-		ui.topicsTable.Table.SetCell(i, 3, tview.NewTableCell(" "+repFactor+"   ").SetTextColor(ui.theme.Foreground))
-		ui.topicsTable.Table.SetCell(i, 5, tview.NewTableCell(" "+bytesToString(ui.topicsSize[topic])+"   ").SetTextColor(ui.theme.Foreground))
+		ui.topicsTable.Table.SetCell(i, 1, tview.NewTableCell(" "+isInternal+"   ").SetTextColor(ui.theme.Foreground).SetStyle(tcell.StyleDefault.Attributes(tcell.AttrDim)))
+		ui.topicsTable.Table.SetCell(i, 2, tview.NewTableCell(" "+partitions+"   ").SetTextColor(ui.theme.Foreground).SetStyle(tcell.StyleDefault.Attributes(tcell.AttrDim)))
+		ui.topicsTable.Table.SetCell(i, 3, tview.NewTableCell(" "+repFactor+"   ").SetTextColor(ui.theme.Foreground).SetStyle(tcell.StyleDefault.Attributes(tcell.AttrDim)))
+		ui.topicsTable.Table.SetCell(i, 5, tview.NewTableCell(" "+bytesToString(ui.topicsSize[topic])+"   ").SetTextColor(ui.theme.Foreground).SetStyle(tcell.StyleDefault.Attributes(tcell.AttrDim)))
 		i++
 	}
 }
@@ -391,24 +409,27 @@ func showTopicDetail(ui *UI, topic string) {
 	detailTitle := tview.NewTextView()
 	detailTitle.SetText("\n " + topic)
 	detailTitle.SetBackgroundColor(ui.theme.Background)
+	detailTitle.SetTextStyle(tcell.StyleDefault.Attributes(tcell.AttrBold))
 	detailTitle.SetTextColor(ui.theme.PrimaryColor)
 
-	kind := "external"
-	if metadata.IsInternal {
-		kind = "internal"
-	}
-	kindText := buildDetailText(ui, " kind: "+kind)
-	sizeText := buildDetailText(ui, " size: "+bytesToString(ui.topicsSize[topic]))
-	partitionsText := buildDetailText(ui, " partitions: "+strconv.Itoa(len(metadata.Partitions)))
-	messagesText := buildDetailText(ui, " messages: ")
-	replicaText := buildDetailText(ui, " rep. factor: "+strconv.Itoa(int(info.ReplicationFactor)))
+	kindText := buildDetailText(ui, " - internal: "+strconv.FormatBool(metadata.IsInternal))
+	sizeText := buildDetailText(ui, " - size: "+bytesToString(ui.topicsSize[topic]))
+	partitionsText := buildDetailText(ui, " - partitions: "+strconv.Itoa(len(metadata.Partitions)))
+	messagesText := buildDetailText(ui, " - messages: ")
+	replicaText := buildDetailText(ui, " - rep. factor: "+strconv.Itoa(int(info.ReplicationFactor)))
 
 	filler := tview.NewTextView()
-	// filler.SetText(getKafkaLogo())
 	filler.SetTextColor(ui.theme.PrimaryColor)
 	filler.SetBackgroundColor(ui.theme.Background)
 
 	ui.topicDetail.AddItem(detailTitle, 3, 0, false)
+
+	mainSubtitle := tview.NewTextView()
+	mainSubtitle.SetBackgroundColor(ui.theme.Background)
+	mainSubtitle.SetText(" Info:")
+	mainSubtitle.SetTextColor(ui.theme.Foreground)
+	ui.topicDetail.AddItem(mainSubtitle, 1, 0, false)
+
 	ui.topicDetail.AddItem(kindText, 1, 0, false)
 	ui.topicDetail.AddItem(partitionsText, 1, 0, false)
 	ui.topicDetail.AddItem(replicaText, 1, 0, false)
@@ -416,25 +437,32 @@ func showTopicDetail(ui *UI, topic string) {
 	ui.topicDetail.AddItem(sizeText, 1, 0, false)
 	ui.topicDetail.AddItem(buildDetailText(ui, ""), 1, 0, false)
 
-	ui.topicDetail.AddItem(sizeText, 1, 0, false)
+	sortedConfigNames := sortMapKeys(info.ConfigEntries)
 
-	for k, v := range info.ConfigEntries {
-		text := buildDetailText(ui, " "+k+": "+*v)
+	cfgSubtitle := tview.NewTextView()
+	cfgSubtitle.SetBackgroundColor(ui.theme.Background)
+	cfgSubtitle.SetText(" Config:")
+	cfgSubtitle.SetTextColor(ui.theme.Foreground)
+	ui.topicDetail.AddItem(cfgSubtitle, 1, 0, false)
+
+	for _, name := range sortedConfigNames {
+		text := buildDetailText(ui, " - "+name+": "+*info.ConfigEntries[name])
 		ui.topicDetail.AddItem(text, 1, 0, false)
 	}
 
 	ui.topicDetail.AddItem(filler, 0, 1, false)
 
 	detailMenu := tview.NewList()
-	detailMenu.AddItem("Clear Messages", "", '1', func() {})
-	detailMenu.AddItem("Recreate Topic", "", '2', func() {})
-	detailMenu.AddItem("Remove Topic", "", '3', func() {})
+	detailMenu.AddItem("Edit Config", "", '1', func() {})
+	detailMenu.AddItem("Clear Messages", "", '2', func() {})
+	detailMenu.AddItem("Recreate Topic", "", '3', func() {})
+	detailMenu.AddItem("Remove Topic", "", '4', func() {})
 	detailMenu.SetMainTextColor(ui.theme.Foreground)
 	detailMenu.SetBackgroundColor(ui.theme.Background)
 	detailMenu.SetSelectedTextColor(ui.theme.Foreground)
 	detailMenu.SetSelectedStyle(tcell.StyleDefault.Attributes(tcell.AttrUnderline))
 
-	ui.topicDetail.AddItem(detailMenu, 6, 1, false)
+	ui.topicDetail.AddItem(detailMenu, 8, 1, false)
 }
 
 func bytesToString(bytes int) string {
@@ -454,11 +482,12 @@ func bytesToString(bytes int) string {
 }
 
 func getTitle() string {
-	title := "   _  _______ _   _ ___"
-	title += "\n  | |/ /_   _| | | |_ _|"
-	title += "\n  | ' /  | | | | | || |"
-	title += "\n  | . \\  | | | |_| || |"
-	title += "\n  |_|\\_\\ |_|  \\___/|___| v" + Version + " (by twoojoo)"
+	title := " ╷  _  _______ _   _ ___"
+	title += "\n │ | |/ /_   _| | | |_ _|"
+	title += "\n │ | ' /  | | | | | || |"
+	title += "\n │ | . \\  | | | |_| || |"
+	title += "\n │ |_|\\_\\ |_|  \\___/|___| v" + Version + " (by twoojoo)"
+	title += "\n └────────────────────────────────────────────"
 	return title
 }
 
@@ -489,7 +518,7 @@ func getTopicMetadata(ui *UI, topic string) *sarama.TopicMetadata {
 		}
 	}
 
-	panic("no such topic")
+	panic("no such topic: " + topic)
 }
 
 func buildDetailText(ui *UI, text string) *tview.TextView {
@@ -499,7 +528,7 @@ func buildDetailText(ui *UI, text string) *tview.TextView {
 	box := tview.NewTextView()
 	box.SetText(text)
 	box.SetBackgroundColor(ui.theme.Background)
-	box.SetTextColor(ui.theme.Foreground)
+	box.SetTextStyle(tcell.StyleDefault.Attributes(tcell.AttrDim))
 	return box
 }
 
@@ -521,4 +550,13 @@ func getKafkaLogo() string {
 	logo += "                   @@    @@@\n"
 	logo += "                    @@@@@@"
 	return logo
+}
+
+func sortMapKeys[T any](m map[string]T) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
 }
