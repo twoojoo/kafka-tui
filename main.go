@@ -277,50 +277,6 @@ func showBrokersView(ui *UI) {
 	}
 }
 
-func showConsumersView(ui *UI) {
-	ui.topics = GetTopics(ui.adminClient)
-	ui.consumerGroups = GetConsumersGroups(ui.adminClient)
-	ui.consumerGroupsDescriptions = GetConsumersGroupsDescription(ui.adminClient, ui.consumerGroups)
-
-	ui.view.SetBorder(false)
-
-	ui.consumersTable.Table.Clear()
-
-	ui.consumersTable.SetColumnNames([]string{
-		" Group ID   ",
-		" N° Members   ",
-		" N° Partitions   ",
-		" Lag   ",
-		" Coordinator   ",
-		" State   ",
-	}, ui.theme.PrimaryColor)
-
-	i := 1
-	for group, info := range ui.consumerGroups {
-
-		var description *sarama.GroupDescription
-		for _, item := range ui.consumerGroupsDescriptions {
-			if item.GroupId == group {
-				description = item
-				break
-			}
-		}
-
-		stateCell := tview.NewTableCell(" " + description.State + "   ")
-		if description.State == "Stable" {
-			stateCell = stateCell.SetTextColor(ui.theme.InfoColor)
-		} else {
-			stateCell = stateCell.SetTextColor(ui.theme.ErrorColor)
-		}
-
-		ui.consumersTable.Table.SetCell(i, 0, tview.NewTableCell(" "+group+"   ").SetTextColor(ui.theme.InEvidenceColor))
-		ui.consumersTable.Table.SetCell(i, 1, tview.NewTableCell(" "+strconv.Itoa(len(description.Members))+"   ").SetTextColor(ui.theme.Foreground))
-		ui.consumersTable.Table.SetCell(i, 2, tview.NewTableCell(" "+info+"   ").SetTextColor(ui.theme.Foreground))
-		ui.consumersTable.Table.SetCell(i, 5, stateCell)
-		i++
-	}
-}
-
 func showTopicsView(ui *UI) {
 	topics := GetTopics(ui.adminClient)
 	ui.topics = topics
@@ -371,6 +327,50 @@ func showTopicsView(ui *UI) {
 	}
 }
 
+func showConsumersView(ui *UI) {
+	ui.topics = GetTopics(ui.adminClient)
+	ui.consumerGroups = GetConsumersGroups(ui.adminClient)
+	ui.consumerGroupsDescriptions = GetConsumersGroupsDescription(ui.adminClient, ui.consumerGroups)
+
+	ui.view.SetBorder(false)
+
+	ui.consumersTable.Table.Clear()
+
+	ui.consumersTable.SetColumnNames([]string{
+		" Group ID   ",
+		" N° Members   ",
+		" N° Partitions   ",
+		" Lag   ",
+		" Coordinator   ",
+		" State   ",
+	}, ui.theme.PrimaryColor)
+
+	i := 1
+	for group, info := range ui.consumerGroups {
+
+		var description *sarama.GroupDescription
+		for _, item := range ui.consumerGroupsDescriptions {
+			if item.GroupId == group {
+				description = item
+				break
+			}
+		}
+
+		stateCell := tview.NewTableCell(" " + description.State + "   ")
+		if description.State == "Stable" {
+			stateCell = stateCell.SetTextColor(ui.theme.InfoColor)
+		} else {
+			stateCell = stateCell.SetTextColor(ui.theme.ErrorColor)
+		}
+
+		ui.consumersTable.Table.SetCell(i, 0, tview.NewTableCell(" "+group+"   ").SetTextColor(ui.theme.InEvidenceColor))
+		ui.consumersTable.Table.SetCell(i, 1, tview.NewTableCell(" "+strconv.Itoa(len(description.Members))+"   ").SetTextColor(ui.theme.Foreground))
+		ui.consumersTable.Table.SetCell(i, 2, tview.NewTableCell(" "+info+"   ").SetTextColor(ui.theme.Foreground))
+		ui.consumersTable.Table.SetCell(i, 5, stateCell)
+		i++
+	}
+}
+
 func showTopicDetail(ui *UI, topic string) {
 	topic = strings.Trim(topic, " ")
 	info := ui.topics[topic]
@@ -416,12 +416,25 @@ func showTopicDetail(ui *UI, topic string) {
 	ui.topicDetail.AddItem(sizeText, 1, 0, false)
 	ui.topicDetail.AddItem(buildDetailText(ui, ""), 1, 0, false)
 
+	ui.topicDetail.AddItem(sizeText, 1, 0, false)
+
 	for k, v := range info.ConfigEntries {
 		text := buildDetailText(ui, " "+k+": "+*v)
 		ui.topicDetail.AddItem(text, 1, 0, false)
 	}
 
 	ui.topicDetail.AddItem(filler, 0, 1, false)
+
+	detailMenu := tview.NewList()
+	detailMenu.AddItem("Clear Messages", "", '1', func() {})
+	detailMenu.AddItem("Recreate Topic", "", '2', func() {})
+	detailMenu.AddItem("Remove Topic", "", '3', func() {})
+	detailMenu.SetMainTextColor(ui.theme.Foreground)
+	detailMenu.SetBackgroundColor(ui.theme.Background)
+	detailMenu.SetSelectedTextColor(ui.theme.Foreground)
+	detailMenu.SetSelectedStyle(tcell.StyleDefault.Attributes(tcell.AttrUnderline))
+
+	ui.topicDetail.AddItem(detailMenu, 6, 1, false)
 }
 
 func bytesToString(bytes int) string {
