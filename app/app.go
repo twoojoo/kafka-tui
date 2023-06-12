@@ -7,8 +7,6 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-	"github.com/twoojoo/ktui/components"
-	"github.com/twoojoo/ktui/kafka"
 	"github.com/twoojoo/ktui/types"
 	"github.com/twoojoo/ktui/views"
 )
@@ -39,38 +37,7 @@ func Run() {
 		}
 	}
 
-	app := tview.NewApplication()
-
-	Theme := types.Theme{
-		Background:      tcell.ColorReset,
-		Foreground:      tcell.ColorWhite,
-		PrimaryColor:    tcell.ColorHotPink,
-		InEvidenceColor: tcell.ColorYellow,
-		InfoColor:       tcell.ColorGreen,
-		ErrorColor:      tcell.ColorRed,
-		WarningColor:    tcell.ColorYellow,
-	}
-
-	SidePane := tview.NewList()
-	admin := kafka.GetAdminClient()
-	topics := kafka.GetTopics(admin)
-	brokers, controllerId := kafka.GetBrokers(admin)
-
-	ui := types.UI{
-		MainContainer:  tview.NewFlex(),
-		AdminClient:    admin,
-		Theme:          &Theme,
-		App:            app,
-		SidePane:       SidePane,
-		CentralView:    tview.NewFlex(),
-		Brokers:        brokers,
-		ControllerId:   controllerId,
-		BrokersTable:   components.NewSearchableTable(SidePane, app),
-		ConsumersTable: components.NewSearchableTable(SidePane, app),
-		TopicsTable:    components.NewSearchableTable(SidePane, app),
-		Topics:         topics,
-		UpdateFunc:     func(*types.UI) {},
-	}
+	ui := Init()	
 
 	//set the refresh goroutine
 	go func(ui *types.UI) {
@@ -80,7 +47,7 @@ func Run() {
 			ui.UpdateFunc(ui)
 			ui.App.Draw()
 		}
-	}(&ui)
+	}(ui)
 
 	ui.SidePane.SetBorder(true)
 	ui.SidePane.SetBackgroundColor(ui.Theme.Background)
@@ -89,6 +56,7 @@ func Run() {
 	ui.SidePane.SetSelectedStyle(tcell.StyleDefault.Attributes(tcell.AttrUnderline))
 
 	ui.CentralView.SetBorder(true)
+	ui.CentralView.SetDirection(0)
 	ui.CentralView.SetBackgroundColor(ui.Theme.Background)
 
 	ui.BrokersTable.Table.SetTitle(" Brokers ")
@@ -136,20 +104,20 @@ func Run() {
 		}
 
 		topic := ui.TopicsTable.Table.GetCell(row, 0).Text
-		views.ShowTopicDetail(&ui, topic)
+		views.ShowTopicDetail(ui, topic)
 	})
 
 	ui.SidePane.AddItem("Brokers", "", '1', func() {
 		ui.CentralView.Clear()
 		ui.CentralView.AddItem(ui.BrokersTable.Container, 0, 2, false)
 		ui.UpdateFunc = views.ShowBrokersView
-		views.ShowBrokersView(&ui)
+		views.ShowBrokersView(ui)
 		ui.App.SetFocus(ui.BrokersTable.Table)
 	})
 
 	ui.SidePane.AddItem("Topics", "", '2', func() {
 		ui.CentralView.Clear()
-		ui.CentralView.AddItem(ui.TopicsTable.Container, 0, 2, false)
+		ui.CentralView.AddItem(ui.TopicsTable.Container, 0, 1, false)
 
 		ui.UpdateFunc = func(ui *types.UI) {
 			focused := ui.App.GetFocus()
@@ -161,10 +129,10 @@ func Run() {
 			views.ShowTopicDetail(ui, topic)
 		}
 
-		views.ShowTopicsView(&ui)
+		views.ShowTopicsView(ui)
 		ui.TopicsTable.Table.Select(1, 0)
 		topic := ui.TopicsTable.Table.GetCell(1, 0).Text
-		views.ShowTopicDetail(&ui, topic)
+		views.ShowTopicDetail(ui, topic)
 
 		ui.SidePane.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 			key := event.Key()
@@ -182,7 +150,7 @@ func Run() {
 		ui.CentralView.Clear()
 		ui.CentralView.AddItem(ui.ConsumersTable.Container, 0, 2, false)
 		ui.UpdateFunc = views.ShowConsumersView
-		views.ShowConsumersView(&ui)
+		views.ShowConsumersView(ui)
 		ui.App.SetFocus(ui.ConsumersTable.Table)
 	})
 
@@ -196,7 +164,7 @@ func Run() {
 	ui.MainView.AddItem(ui.CentralView, 0, 1, false)
 
 	if !noTopBar {
-		AddTopBar(&ui)
+		AddTopBar(ui)
 	}
 
 	ui.MainContainer.SetDirection(0)

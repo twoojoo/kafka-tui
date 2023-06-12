@@ -19,6 +19,8 @@ type UI struct {
 	ConsumersTable *components.SearchableTable
 	TopicsTable    *components.SearchableTable
 	TopicDetail    *tview.Flex
+	IsModalOpen    bool
+	Modal          *tview.Form
 
 	UpdateFunc func(*UI)
 

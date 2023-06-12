@@ -25,8 +25,11 @@ func ShowTopicDetail(ui *types.UI, topic string) {
 	ui.TopicDetail.SetTitleAlign(0)
 
 	ui.CentralView.Clear()
-	ui.CentralView.AddItem(ui.TopicsTable.Container, 0, 2, true)
-	ui.CentralView.AddItem(ui.TopicDetail, 60, 1, false)
+	ui.CentralView.AddItem(ui.TopicsTable.Container, 0, 1, true)
+	ui.MainView.Clear()
+	ui.MainView.AddItem(ui.SidePane, 20, 0, true)
+	ui.MainView.AddItem(ui.CentralView, 0, 1, false)
+	ui.MainView.AddItem(ui.TopicDetail, 60, 1, false)
 
 	detailTitle := tview.NewTextView()
 	detailTitle.SetText("\n " + topic)
