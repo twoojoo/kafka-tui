@@ -4,7 +4,6 @@ import (
 	"os"
 	"strconv"
 
-	// "strings"
 	"time"
 
 	"github.com/Shopify/sarama"
