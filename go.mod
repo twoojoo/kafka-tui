@@ -1,4 +1,4 @@
-module kafka-tui
+module github.com/twoojoo/ktui
 
 go 1.20
 
