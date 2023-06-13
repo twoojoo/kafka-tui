@@ -1,1 +1,3 @@
-# KTUI - A TUI for Apche Kafka, written in Go.
+# KTUI - A TUI for Apche Kafka
+
+Written in Go.
