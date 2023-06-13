@@ -18,6 +18,7 @@ func Run() {
 
 	args := os.Args
 	noTopBar := false
+	mouseOn := false
 
 	for _, arg := range args {
 		if arg == "--version" || arg == "-v" { //VERSION
@@ -34,10 +35,12 @@ func Run() {
 			os.Exit(0)
 		} else if arg == "--no-top-bar" || arg == "-t" { //NO-TOP-BAR
 			noTopBar = true
+		} else if arg == "--mouse-on" || arg == "-m" { //NO-TOP-BAR
+			noTopBar = true
 		}
 	}
 
-	ui := Init()	
+	ui := Init()
 
 	//set the refresh goroutine
 	go func(ui *types.UI) {
@@ -171,7 +174,10 @@ func Run() {
 	ui.MainContainer.AddItem(ui.MainView, 0, 1, true)
 
 	ui.App.SetFocus(ui.SidePane)
-	ui.App.EnableMouse(true)
+
+	if mouseOn {
+		ui.App.EnableMouse(true)
+	}
 
 	if err := ui.App.SetRoot(ui.MainContainer, true).Run(); err != nil {
 		panic(err)

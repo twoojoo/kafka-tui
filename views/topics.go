@@ -3,6 +3,7 @@ package views
 import (
 	"sort"
 	"strconv"
+	"strings"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -66,16 +67,33 @@ func ShowTopicsView(ui *types.UI) {
 
 		if rune == 'a' {
 			modals.ShowAddTopicModal(ui)
-		} else if rune == 'e' {
-			
-		} else if rune == 'c' {
+		} else {
+			row, _ := ui.TopicsTable.Table.GetSelection()
+			topic := strings.Trim(ui.TopicsTable.Table.GetCell(row, 0).Text, " ")
 
-		} else if rune == 'r' {
+			isInternal := false
+			for _, item := range ui.TopicsMetadata {
+				if item.Name == topic {
+					isInternal = item.IsInternal
+					break
+				}
+			}
 
-		} else if rune == 'd' {
+			if isInternal && (rune == 'e' || rune == 'c' || rune == 'd') {
+				modals.ShowErrorModal(ui, "can't edit internal topics")
+				return event
+			}
 
+			if rune == 'e' {
+				modals.ShowEditTopicModal(ui, topic)
+			} else if rune == 'c' {
+				modals.ShowClearMessagesModal(ui, topic)
+			} else if rune == 'r' {
+
+			} else if rune == 'd' {
+				modals.ShowDeleteTopicModal(ui, topic)
+			}
 		}
-
 		return event
 	})
 }

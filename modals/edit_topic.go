@@ -8,17 +8,7 @@ import (
 	"github.com/twoojoo/ktui/types"
 )
 
-const DEFAULT_TOPIC_NAME = "new-topic"
-const DEFAULT_PARTITIONS = "1"
-const DEFAULT_MAX_MSG_BYTES = "1048576"
-const DEFAULT_RETENTION_BYTES = "-1"
-const DEFAULT_RETENTION_MS = "604900000"
-const DEFAULT_SEGMENT_BYTES = "134217728"
-const DEFAULT_SEGMENT_MS = "12096000000"
-
-type NewTopicFields struct {
-	Name            string
-	Compression     string
+type EditTopicFields struct {
 	RepFactor       int
 	Partitions      int
 	MaxMessageBytes int
@@ -28,27 +18,22 @@ type NewTopicFields struct {
 	SegmentMs       int
 }
 
-func ShowAddTopicModal(ui *types.UI) {
+func ShowEditTopicModal(ui *types.UI, topic string) {
 	ui.IsModalOpen = true
 	ui.Modal = tview.NewFlex()
 	form := tview.NewForm()
 	ui.Modal.AddItem(form, 0, 1, true)
-	ui.CentralView.AddItem(ui.Modal, 23, 0, false)
+	ui.CentralView.AddItem(ui.Modal, 21, 1, false)
 
 	ui.Modal.SetBorder(true)
-	ui.Modal.SetTitle(" Add new topic ")
-	ui.Modal.SetTitleColor(ui.Theme.InfoColor)
-	ui.Modal.SetBorderColor(ui.Theme.InfoColor)
+	ui.Modal.SetTitle(" Edit " + topic + " ")
+	ui.Modal.SetTitleColor(tcell.ColorYellow)
+	ui.Modal.SetBorderColor(tcell.ColorYellow)
 	ui.Modal.SetTitleAlign(0)
 	ui.Modal.SetBackgroundColor(ui.Theme.Background)
 	form.SetBackgroundColor(ui.Theme.Background)
 
 	fields := NewTopicFields{}
-
-	form.AddInputField(" Name: ", DEFAULT_TOPIC_NAME, 20, func(text string, _ rune) bool {
-		fields.Name = text
-		return true
-	}, nil)
 
 	form.AddInputField(" Partitions: ", DEFAULT_PARTITIONS, 20, func(text string, lastChar rune) bool {
 		num, err := strconv.Atoi(text)
@@ -138,12 +123,12 @@ func ShowAddTopicModal(ui *types.UI) {
 	form.SetLabelColor(ui.Theme.Foreground)
 
 	form.AddButton("Cancel", func() {
-		exitModal(ui)
+		exitEditTopicModal(ui)
 	})
 
-	form.AddButton("Add", func() {
+	form.AddButton("Edit", func() {
 		createTopic(ui, fields)
-		exitModal(ui)
+		exitEditTopicModal(ui)
 	})
 
 	form.SetButtonBackgroundColor(ui.Theme.Background)
@@ -152,7 +137,7 @@ func ShowAddTopicModal(ui *types.UI) {
 
 	ui.Modal.SetInputCapture(func(e *tcell.EventKey) *tcell.EventKey {
 		if e.Key() == tcell.KeyEscape {
-			exitModal(ui)
+			exitEditTopicModal(ui)
 		}
 
 		return e
@@ -161,13 +146,13 @@ func ShowAddTopicModal(ui *types.UI) {
 	ui.App.SetFocus(ui.Modal)
 }
 
-func exitModal(ui *types.UI) {
+func exitEditTopicModal(ui *types.UI) {
 	ui.IsModalOpen = false
 	ui.CentralView.Clear()
 	ui.CentralView.AddItem(ui.TopicsTable.Container, 0, 1, false)
 	ui.App.SetFocus(ui.TopicsTable.Table)
 }
 
-func createTopic(ui *types.UI, fields NewTopicFields) {
+func editTopic(ui *types.UI, fields NewTopicFields) {
 
 }

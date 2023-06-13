@@ -20,7 +20,7 @@ type UI struct {
 	TopicsTable    *components.SearchableTable
 	TopicDetail    *tview.Flex
 	IsModalOpen    bool
-	Modal          *tview.Form
+	Modal          *tview.Flex
 
 	UpdateFunc func(*UI)
 
