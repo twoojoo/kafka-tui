@@ -68,6 +68,7 @@ func GetConsumersGroupsDescription(admin *sarama.ClusterAdmin, groups map[string
 		panic(err)
 	}
 
+
 	return desc
 }
 
